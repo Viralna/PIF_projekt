@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
   fig.align = "center"
 )
 
-options(digits = 3)
+options(digits = 4)
 
 set.seed(17)
 
@@ -35,39 +35,288 @@ library(binom)
 library(ggtext)
 library(latex2exp)
 library(DescTools)
-library(car)
-library(ggtext)
-library(MASS)
-library(nlme)
-library(extraDistr)
-library(glmnet)
-library(pracma)
 library(ggpubr)
-library(mvtnorm)
-library(knockoff)
-library(bigstep)
 library(parallel)
-#title = expression("Moc testu t dla różnych " * beta[1] * " i " * sigma^2),
-#expression("Zadanie 2b. Obciążenia " * hat(rho) * " i " * hat(gamma))
-#$\mathbb{P}$
+
+#Zmienne globalne
+
+Pi <- 0.02   # roczna stopa inflacji
+c  <- 0.03   # roczna stopa zwrotu z obligacji
+I  <- 0.05   # roczna stopa wzrostu pensji
+t0 <- 0      # początek oszczędzania
+t  <- 40     # przejście na emeryturę
+td <- 60     # rok śmierci
+
 ```
 
-## R Markdown
+# Wstęp
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Celem projektu jest lepsze zrozumienie natury oszczędności emerytalnych i empiryczne obliczenie zmienności wartości pieniądza w czasie w kontekście emerytalnym.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+W projekcie zaplanowana zostanie moja własna emerytura pod kątem finansowym.
 
-```{r cars}
-summary(cars)
+W rozdysponowywaniu pieniędzy dostępna jest jedna inwestycja - obligacje, które są związane ze stopą inflacji. 
+
+
+Wprowadźmy oznaczenia:
+
+\begin{itemize}
+\item {$\Pi$} - roczna realna stopa inflacji,
+\item {c} - roczna realna stopa zwrotu z obligacji,
+\item {I} -  roczna realna stopa wzrostu pensji,
+\item {$t_0$} - rok rozpoczęcia odkładania funduszy na emeryturę,
+\item {T} - rok przejścia na emeryturę,
+\item {$t_d$} - rok śmierci,
+\item {p} - procent odkładanej pensji na emeryturę w każdym miesiącu.
+\end{itemize}
+
+
+Dane początkowe:
+
+* $\Pi=0.02$,
+
+* c = 0.03,
+
+* I = 0.05,
+
+* $t_0=0$,
+
+* T=0,
+
+* $t_d=60$.
+
+
+
+# Zadanie 1
+
+Przy powyższych danych początkowych obliczone zostanie p takie, że pierwsza emerytura będzie równa ostatniej
+pensji, a następnie będzie rosnąć w takim samym tempie jak inflacja.
+
+Realna stopa to stopa już skorygowana o inflację tzn. Realna stopa $\approx$ stopa nominalna  - inflacja.
+
+
+```{r zadanie1}
+
+#Zadanie 1
+
+
+
+emerytura_p <- function(Pi = 0.02,
+                        c = 0.03,
+                        I = 0.05,
+                        t0 = 0,
+                        t = 40,  #Rok przejścia na emeryturę. Małe t dlatego, że T w Rstudio oznacza TRUE.
+                        td = 60,
+                        wyplata_t0 = 1) { # poczatkowa miesieczna wypłata "jednostka wypłaty"
+  
+
+  msc_o <- (t - t0) * 12     # liczba miesięcy, w których oszczędzamy na emeryturę/ pracujemy do emerytury
+  msc_e <- (td - t) * 12     # liczba miesiecy, w których jesteśmy na emeryturze/ otrzymujemy wypłaty emerytalne
+  
+  
+  Pi_msc <- (1 + Pi)^(1 / 12) - 1  # miesięczna realna stopa inflacji
+  c_msc  <- (1 + c)^(1 / 12) - 1   # miesięczna realna stopa zwrotu z obligacji
+  I_msc  <- (1 + I)^(1 / 12) - 1   # miesięczna realna stopa wzrostu pensji
+  
+
+  wyplata_t <- wyplata_t0 * (1 + I_msc)^(msc_o - 1)# ostatnia miesięczna wypłata ("w jednostkach wypłaty" tzn. później można ją przemnożyć przez dowolną kwotę pierwszej wypłaty, obliczenia są dla sytuacji ogólnej, ale i tak p nie zależy od wysokości pierwszej wypłaty)
+  
+  
+  # Pierwsza emerytura PV na moment t = ostatnia pensja
+  # PV_t(pierwsza emerytura) = wyplata_t
+  # Porównujemy PV ostatniej pensji z PV pierwszej emerytury (tzn. między momentem wypłaty ost. pensji i momentem wypłaty pierwszej emeryt.      wciąż naliczają nam się odsetki z inwestowania w obligację)
+  # pierwsza_emerytura = wyplata_t * (1 + c_msc)
+  
+  pierwsza_emerytura <- wyplata_t * (1 + c_msc)
+  
+  
+  # Kapitał potrzebny na początku emerytury czyli chwilę po momencie wypłaty ostatniej pensji
+  # PV wypłat emerytalnych (dyskontowanie)
+  
+  q_em <- (1 + Pi_msc) / (1 + c_msc)
+  K_t <- pierwsza_emerytura * (1 - q_em^msc_e) / (c_msc - Pi_msc)  # kapitał potrzebny na początku emerytury
+  
+  #chcemy 'równanie równoważności' między K_t zdyskontowanymi (emerytura) i zakumulowanymi (pensja)
+  
+  # FV składek (akumulacja)
+  q_o <- (1 + I_msc) / (1 + c_msc)  # iloraz szeregu dla oszczędności podczas aktywnej pracy/pensji
+  wsp_akum <- (1 + c_msc)^(msc_o - 1) * (1 - q_o^msc_o) / (1 - q_o)  #współczynnik akumulacji
+  
+  # K_t = FV_składek = p * wypłata0 * wsp_akum
+  
+  
+  
+  
+  p <- K_t / (wyplata_t0 * wsp_akum) # procent pensji odkładany miesięcznie
+
+  
+  list(
+    p = p,
+    p_procentowo = 100 * p,
+    wyplata_t = wyplata_t,
+    pierwsza_emerytura = pierwsza_emerytura,
+    kapital_potrzebny_t = K_t,
+    wspolczynnik_akumulacji = wsp_akum
+  )
+}
+
+
+wyniki <- emerytura_p()
+
+
 ```
 
-## Including Plots
+## Wzory potrzebne do implementacji zadania
 
-You can also embed plots, for example:
+Do wyznaczenia procentu odkładanej pensji p skorzystamy ze wzorów:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+$$
+p = \frac{emerytura_{T+1} \cdot (1 + c_{msc}) \cdot \dfrac{1 - q_{em}^{12 \cdot (t_d - T)}}{c_{msc} - \Pi_{msc}}}{wyplata_0 \cdot (1 + c_{msc})^{12  \cdot (T - t_0)  - 1} \cdot \dfrac{1 - q_{o}^{(T - t_0) \cdot 12}}{1 - q_{o}}},
+$$
+gdzie:
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+$$q_{o} = \frac{1 + I_{msc}}{1 + c_{msc}}, \quad q_{em} = \frac{1 + \pi_{msc}}{1 + c_{msc}}$$
+
+$I_{msc} = (1 + I)^{1/12} - 1$ $\leftarrow$ miesięczna realna stopa wzrostu pensji 
+\newline
+$c_{msc} = (1 + c)^{1/12} - 1$ $\leftarrow$ miesięczna realna stopa zwrotu z obligacji
+\newline
+$\Pi_{msc} = (1 + \Pi)^{1/12} - 1$ $\leftarrow$ miesięczna realna stopa inflacji
+
+
+\ 
+
+$wyplata_0$ $\leftarrow$ pierwsza pensja, wypłacona na koniec pierwszego miesiąca pracy,
+\ 
+
+$wyplata_{T} = wyplata_0\cdot (1 + I_{msc})^{12 \cdot (T - t_0) - 1}$ $\leftarrow$ pensja wypłacona w momencie T,
+\ 
+
+$emerytura_{T+1}$ $\leftarrow$ pierwsza emerytura, wypłacona na koniec pierwszego miesiąca emerytury,
+\ 
+
+$emerytura_{T+1} = wyplata_T \cdot (1 + c_{msc})$ od momentu T do T+1 odsetki z obligacji naliczają się,
+\ 
+
+$wyplata_T$ $\leftarrow$ ostatnia pensja przed przejściem na emeryturę, wypłacona na koniec ostatniego miesiąca pracy.
+\ 
+
+
+
+
+
+
+
+Zakładamy, że \textbf{wartość obecna} pierwszej emerytury na moment przejścia na emeryturę ($T$) jest równa ostatniej pensji:
+
+$$PV_T(emerytura_{T+1}) = \frac{emerytura_{T+1}}{1 + c_{msc}} = wyplata_T$$
+
+Daje to emeryturę \textbf{nieco wyższą} niż ostatnia pensja (o około 0.25\% miesięcznie, czyli około 3\% rocznie), ponieważ uwzględniamy odsetki, które naliczają się między momentem wypłaty ostatniej pensji a momentem wypłaty pierwszej emerytury.
+
+## Równanie równoważności
+
+Podstawowy warunek modelu to równość Future Value składek i kapitału potrzebnego na emeryturę:
+
+FV(składek) = $K_T$
+
+p $\cdot wyplata_0 \cdot$ współczynnik akumulacyjny = $K_T$
+
+Stąd:
+
+$p = \frac{K_T}{wyplata_0 \cdot wsp\_akum}$
+
+
+## Wynik p
+
+Wykonując powyższe równanie otrzymujemy: $p \approx$ `r wyniki$p` = `r wyniki$p_procentowo` % pensji miesięcznie.
+
+\textbf{Jest to bardzo wysoki i niemalże nierealistyczny wynik.}
+
+\begin{enumerate}
+    \item \textbf{Holistyczne założenia:}
+    \begin{itemize}
+        \item Wzrost pensji 5\% rocznie > stopa zwrotu 3\% rocznie
+        \item To oznacza, że pensja rośnie szybciej niż kapitał się gromadzi
+        \item W praktyce składki z późniejszych lat są większe (bo pensja wyższa), ale pracują krócej na odsetkach
+    \end{itemize}
+    
+  \item \textbf{Emerytura równa ostatniej pensji:}
+  \begin{itemize}
+      \item To bardzo ambitny cel
+      \item Ostatnia pensja po 40 (T) latach pracy jest około 7 razy wyższa niż pierwsza pensja:
+      $wyplata_T \approx$ `r wyniki$wyplata_t`
+  \end{itemize}
+    
+    \item \textbf{Niska stopa zwrotu:}
+    \begin{itemize}
+        \item 3\% rocznie to niska stopa (obligacje)
+        \item W praktyce zdywersyfikowany portfel (akcje + obligacje) może dać 5-7\% rocznie
+        \item Gdyby $c = 5\%$, $p$ byłoby znacznie niższe
+    \end{itemize}
+    
+    \item \textbf{Długi okres emerytury:}
+    \begin{itemize}
+        \item 20 lat emerytury to dużo
+        \item Kapitał musi wystarczyć na 240 wypłat rosnących o inflację
+    \end{itemize}
+\end{enumerate}
+
+
+
+\textbf{Porównanie z rzeczywistością:}
+
+\begin{itemize}
+    \item \textbf{PPK w Polsce:} składka 4\% (2\% pracownik + 2\% pracodawca) + 1.5\% z fiskusa = 5.5\%
+    \item \textbf{IKE/IKZE:} ludzie odkładają zazwyczaj 5-15\% pensji
+    \item \textbf{Rekomendacje:} eksperci sugerują odkładanie dodatkowo 10-20\% pensji na emeryturę
+\end{itemize}
+
+
+## Realistyczny poziom p i przykładowe rozwiązania
+
+\textbf{Jak obniżyć $p$ do realistycznego poziomu?}
+
+\begin{enumerate}
+    \item \textbf{Zwiększyć stopę zwrotu:}
+    \begin{itemize}
+        \item Przy $c = 5\%$: $p \approx 35-40\%$
+        \item Przy $c = 7\%$: $p \approx 25-30\%$
+    \end{itemize}
+    
+    \item \textbf{Zmniejszyć cel emerytury:}
+    \begin{itemize}
+        \item Przy 70\% ostatniej pensji: $p \approx 45-50\%$
+        \item Przy 50\% ostatniej pensji: $p \approx 30-35\%$
+    \end{itemize}
+    
+    \item \textbf{Zwiększyć wiek emerytalny:}
+    \begin{itemize}
+        \item Przy 45 latach pracy: $p$ spadnie o około 10\%
+    \end{itemize}
+    
+    \item \textbf{Skrócić okres emerytury?:}
+    \begin{itemize}
+        \item Przy 15 latach emerytury: $p \approx 50-55\%$
+    \end{itemize}
+\end{enumerate}
+
+
+
+\textbf{Wniosek:} Wynik $p \approx 65\%$ jest \textbf{matematycznie poprawny} dla założeń zadania, ale w praktyce jest nierealistycznie wysoki. Sugeruje to, że:
+\begin{itemize}
+    \item Przy obecnych założeniach (niska stopa zwrotu, ambitny cel emerytury) oszczędzanie na emeryturę jest bardzo trudne,
+    \item W rzeczywistości ludzie polegają na systemie publicznym (ZUS) i odkładają prywatnie mniejsze kwoty,
+\end{itemize}
+
+
+
+
+  
+w rzeczywistości (ZUS)  Bardziej realistyczne (emerytury w Polsce są z góry)
+
+
+p nie zależy od konkretnej wysokości pensji początkowej
+
+W pracy raczej podwyżki nie są same w sobie co miesiąc tylko co m.in. rok i nie są tak duże
+
+Jeśli umrę wcześniej to rodzina może odziedziczyć resztę kapitału z obligacji?
