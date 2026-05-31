@@ -6,7 +6,50 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+  dev = "cairo_pdf",
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  comment = FALSE,
+  
+  #fig.width = 8,
+  fig.height = 6,
+  fig.align = "center"
+)
+
+options(digits = 3)
+
+set.seed(17)
+
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(readxl)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+library(reshape2)
+library(gridExtra)
+library(binom)
+library(ggtext)
+library(latex2exp)
+library(DescTools)
+library(car)
+library(ggtext)
+library(MASS)
+library(nlme)
+library(extraDistr)
+library(glmnet)
+library(pracma)
+library(ggpubr)
+library(mvtnorm)
+library(knockoff)
+library(bigstep)
+library(parallel)
+#title = expression("Moc testu t dla różnych " * beta[1] * " i " * sigma^2),
+#expression("Zadanie 2b. Obciążenia " * hat(rho) * " i " * hat(gamma))
+#$\mathbb{P}$
 ```
 
 ## R Markdown
