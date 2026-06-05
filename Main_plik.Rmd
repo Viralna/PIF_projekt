@@ -1,8 +1,10 @@
 ---
 title: "Emerytura"
-author: "Wiktoria Skolimowska,"
+author: "Wiktoria Skolimowska"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  pdf_document:
+    latex_engine: xelatex
 header-includes:
   - \usepackage{tcolorbox}
   - \usepackage{xcolor}
@@ -87,7 +89,7 @@ Dane początkowe:
 c = 0.03,\quad
 I = 0.05,\quad
 t_0 = 0,\quad
-T = 0,\quad
+T = 40,\quad
 t_d = 60.
 \]
 \end{tcolorbox}
@@ -106,13 +108,13 @@ Warto zaznaczyć, że realna stopa $\approx$ stopa nominalna - inflacja.
 
 #Zadanie 1
 
-set.seed(17)
+
 
 emerytura_p <- function(Pi = 0.02,
                         c = 0.03,
                         I = 0.05,
                         t0 = 0,
-                        t = 40,  #Rok przejścia na emeryturę. Małe t dlatego, że T w Rstudio oznacza TRUE.
+                        t = 40,  #Rok przejścia na emeryturę od teraźniejszości. zał. t0=0 to tak na prawdę moment obecny w którym mamy 22 lata. Małe t dlatego, że T w Rstudio oznacza TRUE.
                         td = 60,
                         wyplata_t0 = 1) { # początkowa miesieczna wypłata "jednostka wypłaty"
   
@@ -147,12 +149,18 @@ emerytura_p <- function(Pi = 0.02,
   
   # 'FV' składek z pensji (akumulacja) | FV to tak na prawdę p * wypłata0 * wsp_akum
   q_o <- (1 + I_msc) / (1 + c_msc)
-  wsp_akum <- (1 + c_msc)^(msc_o - 1) * (1 - q_o^msc_o) / (1 - q_o)  #współczynnik akumulacji
+ # wsp_akum <- (1 + c_msc)^(msc_o - 1) * (1 - q_o^msc_o) / (1 - q_o)  #współczynnik akumulacji
   
   #chcemy 'równanie równoważności' między K_t zdyskontowanym (emerytura) i zakumulowanym (pensja)
   # K_t = FV_składek = p * wypłata0 * wsp_akum
   
+  # warunek na stabilność #współczynnika akumulacji
   
+  if (abs(1 - q_o) < 1e-6) {
+    wsp_akum <- msc_o * (1 + c_msc)^(msc_o - 1)    # dokładne wyjaśnienie w pliku dodatki.pdf
+  } else {
+    wsp_akum <- (1 + c_msc)^(msc_o - 1) * (1 - q_o^msc_o) / (1 - q_o)
+  }
   
   
   p <- K_t / (wyplata_t0 * wsp_akum) # procent pensji odkładany miesięcznie
@@ -258,12 +266,13 @@ Implementując powyższy wzór oraz bazując na danych początkowych otrzymujemy
 
 \textit{Jest to bardzo wysoki i niemalże nierealistyczny wynik dla przeciętnego człowiekam, więcej na ten temat w $\S_3$.}
 
+\newpage
 
 # $\S_2$ Wrażliwość p na parametry modelu
 
+Warto zaznaczyć, że $t_0$, T, $t_d$ będą podawane w roku użycia osoby zarabiającej/przyjmującej emeryturę. W modelu założyliśmy, że \newline $t_0$ = 0, T = 40, $t_d$ = 60, natomiast na wykresie będą to odpowiednio lata życia: $t_0$ = 22, T = 62, $t_d$ = 82 itd. W skrócie, zakładamy, że zaczynamy zarabiać w wieku 22 lat i od tego momentu możemy zbierać na emeryturę.
 
-
-```{r zadanie_2}
+```{r zadanie2}
 
 analiza_wrazliwosci <- function() {
   
@@ -271,6 +280,7 @@ analiza_wrazliwosci <- function() {
     Pi = seq(0, 0.17, 0.001),      #w 2022/2023 była kilkunastoprocentowa inflacja więc warto zbadać podobnie
     c  = seq(0.02, 0.09, 0.0005),  #oprocentowanie obligacji raczej 2% < . < 8%
     I  = seq(0.00, 0.08, 0.0005),  #podwyżki roczne < 8% ? to i tak jest dużo
+    t0 = 0:23,                     #rozpoczęcie odkładania na emeryturę 22-55(rok życia)
     t  = 33:43,                    #wiek rozpoczęcia emerytury 55–65 (od mojego obecnego wieku)
     td = 48:78                     #'realistyczne' lata śmierci 70–100
     ) #takie małe 'kroki' ponieważ wykresy w pdf miały jakieś dziwne dzikie dziury, ale już wywołane w rmd nie miały :) 
@@ -284,18 +294,28 @@ analiza_wrazliwosci <- function() {
   }))
 }
 
+wiek_start <- 22 #wiek startowy, aby wykresy były bardziej czytelne
+
 wyniki_2 <- analiza_wrazliwosci()
 
+wyniki_2$wartosc <- ifelse(
+  wyniki_2$parametr %in% c("t0", "t", "td"),
+  wiek_start + wyniki_2$wartosc,
+  wyniki_2$wartosc * 100
+)
 
 wyniki_2$parametr <- factor(
   wyniki_2$parametr,
-  levels = c("Pi", "c", "I", "t", "td"),
-  labels = c("Inflacja Pi", "Stopa zwrotu c", "Wzrost pensji I", "Rok przejścia na emeryturę", "Rok śmierci")
+  levels = c("Pi", "c", "I","t0", "t", "td"),
+  labels = c("Inflacja Pi (%)", "Stopa zwrotu c (%)", "Wzrost pensji I (%)", "Wiek rozpoczęcia oszczędzania", "Wiek przejścia na emeryturę", "Wiek śmierci")
 )
 
- 
-# ggplot(wyniki_2, aes(x = wartosc, y = p, color = parametr)) +
-#   geom_line(linewidth = 2) +
+
+
+# Do późniejszego zapisu jako png, bo jakoś ładniejsze są wtedy proporcje w pdf
+
+# ggplot(wyniki_2, aes(x = wartosc, y = p, group = parametr, color = parametr)) +
+#   geom_line(linewidth = 3, lineend = "round", linejoin = "round") +
 #   facet_wrap(~ parametr, scales = "free_x") +
 #   labs(
 #     title = "Wrażliwość p na parametry modelu",
@@ -303,11 +323,12 @@ wyniki_2$parametr <- factor(
 #     y = "p (%)"
 #   ) +
 #   scale_color_manual(values = c(
-#     "Inflacja Pi" = "deepskyblue2",
-#     "Stopa zwrotu c" = "darkorange2",
-#     "Wzrost pensji I" = "maroon3",
-#     "Rok przejścia na emeryturę" = "forestgreen",
-#     "Rok śmierci" = "firebrick"
+#     "Inflacja Pi (%)" = "deepskyblue2",
+#     "Stopa zwrotu c (%)" = "darkorange2",
+#     "Wzrost pensji I (%)" = "maroon3",
+#     "Wiek rozpoczęcia oszczędzania" = "darkmagenta",
+#     "Wiek przejścia na emeryturę" = "forestgreen",
+#     "Wiek śmierci" = "firebrick"
 #   )) +
 #   theme(legend.position = "none",
 #         plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
@@ -316,83 +337,146 @@ wyniki_2$parametr <- factor(
 #         axis.title.x = element_text(hjust = 0.5, size = 17, face = "bold"),
 #         axis.title.y = element_text(hjust = 0.5, size = 17, face = "bold"))
 # 
-# ggsave("wykresy_wrazliwosci.png", width = 12, height = 8, dpi = 300)
-#dołączam możliwość zobaczenia, że kod jest poprawny ale zapis pdf zwariował :(
+#  ggsave("wrazliwosc.png", width = 12, height = 8, dpi = 300)
+
+
 
 # Heatmapa wpływu zwrotu z obligacji i wzrostu wypłaty na p
 
 
-zakresy_hm <- expand.grid(c = seq(0.01, 0.2, 0.005), I = seq(0, 0.1, 0.005))
+zakresy_hm <- expand.grid(c = seq(0.001, 0.1, 0.005), I = seq(0, 0.08, 0.005))
 
 zakresy_hm$p <- mapply(function(c, I) {
   emerytura_p(c = c, I = I)$p_procentowo
 }, zakresy_hm$c, zakresy_hm$I)
 
+zakresy_hm$c_proc <- zakresy_hm$c * 100
+zakresy_hm$I_proc <- zakresy_hm$I * 100
 
-
-hm_c_I <- ggplot(zakresy_hm, aes(x = c, y = I, fill = p)) +
+hm_c_I <- ggplot(zakresy_hm, aes(x = c_proc , y = I_proc, fill = p)) +
   geom_tile() +
   scale_fill_gradient(low = "skyblue", high = "maroon3") +
-  labs(title = "Mapa wrażliwości p dla c i I",
-       x = "c (stopa zwrotu z obligacji) ",
-       y = "I (stopa wzrostu wypłaty)",
-       fill = "p (%)")
+  labs(title = "Heatmapa wrażliwości p w zależności od c i I",
+       x = "c (stopa zwrotu z obligacji w %) ",
+       y = "I (stopa wzrostu wypłaty w %)",
+       fill = "p (%)") +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    axis.text = element_text(size = 10)
+  )
 
 #Heatmapa wpływu momentu przejścia na emeryturę i śmierci na p
 
-zakresy_t_td <- subset(
-  expand.grid(
-    t = 30:45,
-    td = 41:95
-  ),
-  td > t
-)
+zakresy_t_td <- expand.grid(t = 33:43, td = 48:78)
 
 zakresy_t_td$p <- mapply(function(t, td) {
   emerytura_p(t = t, td = td)$p_procentowo
-}, zakresy_t_td$t, zakresy_t_td$td)
+}, zakresy_t_td$t, zakresy_t_td$td)   #liczymy dla tych bez wieku startowego
 
-ggplot(zakresy_t_td, aes(x = t, y = td, fill = p)) +
+zakresy_t_td <- zakresy_t_td |>
+  transform(
+    t = wiek_start + t,
+    td = wiek_start + td
+  )
+
+hm_t_td <- ggplot(zakresy_t_td, aes(x = t, y = td, fill = p)) +
   geom_tile() +
  scale_fill_viridis_c(option = "plasma") +
   labs(
-    title = "Mapa wrażliwości p dla t i td",
-    x = "t",
-    y = "td",
+    title = TeX("Mapa wrażliwości p w zależności od t i $t_d$"),
+    x = "T (wiek rozpoczęcia emerytury)",
+    y = TeX("$t_d$ (wiek śmierci)"),
     fill = "p (%)"
   )
 
 
-#limit 100% ??
-ggplot(subset(zakresy_t_td, p <= 100), aes(x = t, y = td, fill = p)) +
+
+#Wykres zaczęcia oszczędzania na emeryturę
+
+
+zakresy_t0_td <- expand.grid(t0 = 0:23, td = 48:78)
+
+zakresy_t0_td$p <- mapply(function(t0, td) {
+  emerytura_p(t0 = t0, td = td)$p_procentowo
+}, zakresy_t0_td$t0, zakresy_t0_td$td)
+
+zakresy_t0_td <- zakresy_t0_td |>
+  transform(
+    t0 = wiek_start + t0,
+    td = wiek_start + td
+  )
+
+hm_t0_td <- ggplot(zakresy_t0_td, aes(x = t0, y = td, fill = p)) +
   geom_tile() +
-  scale_fill_viridis_c(option = "plasma", limits = c(0, 100)) +
+  scale_fill_viridis_c(option = "magma") +
   labs(
-    title = "Mapa wrażliwości p dla t i td - do 100%",
-    x = "t",
-    y = "td",
+    title = TeX("Mapa wrażliwości p w zależności od $t_0$ i $t_d$"),
+    x = TeX("$t_0$ (wiek rozpoczęcia pracy)"),
+    y = TeX("$t_d$ (wiek śmierci)"),
     fill = "p (%)"
   )
 
 
-#Wykres zaczęcia oszczędzania na emeryturę?>
+zakresy_t0_t <- expand.grid(t0 = 0:23, t = 33:43)
 
+zakresy_t0_t$p <- mapply(function(t0, t) {
+  emerytura_p(t0 = t0, t = t)$p_procentowo
+}, zakresy_t0_t$t0, zakresy_t0_t$t)
 
+zakresy_t0_t <- zakresy_t0_t |>
+  transform(
+    t0 = wiek_start + t0,
+    t = wiek_start + t
+  )
 
+hm_t0_t <- ggplot(zakresy_t0_t, aes(x = t0, y = t, fill = p)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "heat") +
+  labs(
+    title = TeX("Mapa wrażliwości p w zależności od $t_0$ i T"),
+    x = TeX("$t_0$ (wiek rozpoczęcia pracy)"),
+    y = "T (wiek rozpoczęcia emerytury)",
+    fill = "p (%)"
+  )
 
 
 ```
 
 ```{r, out.width='100%'}
-knitr::include_graphics("wykresy_wrazliwosci.png")
+knitr::include_graphics("wrazliwosc.png")
+```
 
-hm_c_I
+```{r,fig.align='center',ig.width=7,fig.height=9}
+
+grid.arrange(hm_t_td,hm_t0_td,hm_t0_t,ncol=1)
+
+
+```
+
+```{r,fig.align='center'}
+grid.arrange(hm_c_I,ncol=1)
 ```
 
 \textbf {Wnioski z powyższych wykresów wrażliwości:}
 \begin{itemize}[label=$\square$]
-\item{fsfsf}
+\item \textbf{Wpływ inflacji}: {Inflacja nie ma wpływu na procent odkładanej pensji, ponieważ używamy realnych stóp procentowych. Fakt ten można również wywnioskować z braku $\Pi$ we wzorze na p z $\S_1$.}
+\item \textbf{Wpływ stopy zwrotu:} {fsf}
+\item \textbf{Wpływ wzrostu pensji:} {sgsg}
+\item \textbf{Wpływ wieku rozpoczęcia oszczędzania:} {gsg}
+\item \textbf{Wpływ wieku przejścia na emeryturę:} {sgsg}
+\item \textbf{Wpływ wieku śmierci:} {gsg}
 \end{itemize}
+
+
+
+
+
+
+  
+
+# $\S_3$ Wady modelu i próba urzeczywistnienia jego założeń
+
+
 
 
 ## Realistyczny poziom p i przykładowe rozwiązania
@@ -405,24 +489,12 @@ hm_c_I
         \item Przy $c = 5\%$: $p \approx 35-40\%$
         \item Przy $c = 7\%$: $p \approx 25-30\%$
     \end{itemize}
+    \end{enumerate}
     
-    \item \textbf{Zmniejszyć cel emerytury:}
-    \begin{itemize}
-        \item Przy 70\% ostatniej pensji: $p \approx 45-50\%$
-        \item Przy 50\% ostatniej pensji: $p \approx 30-35\%$
-    \end{itemize}
+\textbf{Zmniejszyć cel emerytury:}
+
     
-    \item \textbf{Zwiększyć wiek emerytalny:}
-    \begin{itemize}
-        \item Przy 45 latach pracy: $p$ spadnie o około 10\%
-    \end{itemize}
-    
-    \item \textbf{Skrócić okres emerytury?:}
-    \begin{itemize}
-        \item Przy 15 latach emerytury: $p \approx 50-55\%$
-    \end{itemize}
-\end{enumerate}
-# $\S_3$ Wady modelu i próba urzeczywistnienia jego założeń
+\textbf{Zwiększyć wiek emerytalny:}
 
 \begin{enumerate}
     \item \textbf{Holistyczne założenia:}
@@ -432,14 +504,14 @@ hm_c_I
         \item W praktyce składki z późniejszych lat są większe (bo pensja wyższa), ale pracują krócej na odsetkach
     \end{itemize}
     
-  \item \textbf{Emerytura równa ostatniej pensji:}
+  \textbf{Emerytura równa ostatniej pensji:}
   \begin{itemize}
       \item To bardzo ambitny cel
       \item Ostatnia pensja po 40 (T) latach pracy jest około 7 razy wyższa niż pierwsza pensja:
       $wyplata_T \approx$ `r wyniki$wyplata_t`
   \end{itemize}
     
-    \item \textbf{Niska stopa zwrotu:}
+\textbf{Niska stopa zwrotu:}
     \begin{itemize}
         \item 3\% rocznie to niska stopa (obligacje)
         \item W praktyce zdywersyfikowany portfel (akcje + obligacje) może dać 5-7\% rocznie
@@ -467,7 +539,7 @@ hm_c_I
 \textbf{Wniosek:} Wynik $p \approx$ `r wyniki$p_procentowo`\%$ jest \textbf{matematycznie poprawny} dla założeń zadania, ale w praktyce jest nierealistycznie wysoki. Sugeruje to, że:
 \begin{itemize}
     \item Przy obecnych założeniach (niska stopa zwrotu, ambitny cel emerytury) oszczędzanie na emeryturę jest bardzo trudne,
-    \item W rzeczywistości ludzie polegają na systemie publicznym (ZUS) i odkładają prywatnie mniejsze kwoty,
+    \item W rzeczywistości ludzie (błędnie) polegają na systemie publicznym (ZUS) i odkładają prywatnie mniejsze kwoty, lub i nie.
 \end{itemize}
 
 
