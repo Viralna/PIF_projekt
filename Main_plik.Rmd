@@ -6,7 +6,8 @@ output: pdf_document
 header-includes:
   - \usepackage{tcolorbox}
   - \usepackage{xcolor}
-    \definecolor{darkred}{HTML}{8B0000}
+  -  \definecolor{darkred}{HTML}{8B0000}
+  - \usepackage{enumitem}
 ---
 
 ```{r setup, include=FALSE}
@@ -15,14 +16,14 @@ knitr::opts_chunk$set(
   echo = FALSE,
   warning = FALSE,
   message = FALSE,
-  comment = FALSE,
+  comment = FALSE
   
   #fig.width = 8,
-  fig.height = 6,
-  fig.align = "center"
+ # fig.height = 6,
+  #fig.align = "center"
 )
 
-options(digits = 4)
+options(digits = 3)
 
 set.seed(17)
 
@@ -162,8 +163,8 @@ emerytura_p <- function(Pi = 0.02,
     p_procentowo = 100 * p,
     wyplata_t = wyplata_t,
     pierwsza_emerytura = pierwsza_emerytura,
-    kapital_potrzebny_t = K_t,
-    wspolczynnik_akumulacji = wsp_akum
+    roznica_emer_wyplata_proc_msc = ((pierwsza_emerytura / wyplata_t) - 1 )* 100,
+    roznica_emer_wyplata_proc_rok = ((pierwsza_emerytura / wyplata_t) - 1 ) * 100 * 12
   )
 }
 
@@ -230,7 +231,7 @@ Zakładamy, że \textbf{wartość obecna} pierwszej emerytury w momencie przejś
 
 $$PV_T(emerytura_{T+1}) = \frac{emerytura_{T+1}}{1 + c_{msc}} = wyplata_T$$
 
-Daje to emeryturę \textbf{nieco wyższą} niż ostatnia pensja (o około 0.28\% miesięcznie, czyli około 3.4\% rocznie), ponieważ uwzględniamy odsetki z obligacji, które naliczają się między momentem wypłaty ostatniej pensji a momentem wypłaty pierwszej emerytury.
+Daje to emeryturę \textbf{nieco wyższą} niż ostatnia pensja (o około `r round(wyniki$roznica_emer_wyplata_proc_msc,2)`\% miesięcznie, czyli około `r round(wyniki$roznica_emer_wyplata_proc_rok,2)` \% rocznie), ponieważ uwzględniamy odsetki z obligacji, które naliczają się między momentem wypłaty ostatniej pensji a momentem wypłaty pierwszej emerytury.
 
 \newpage
 
@@ -251,10 +252,177 @@ Dokładne wyprowadzenie wzoru znajduje się w pliku \textit{dodatki.pdf}.
 
 ## Wynik p
 
-Implementując powyższy wzór i bazując na danych początkowych oraz używając (set.seed(17)) otrzymujemy:
+Implementując powyższy wzór oraz bazując na danych początkowych otrzymujemy: 
+
 **p $\approx$ `r wyniki$p` = `r wyniki$p_procentowo`% pensji miesięcznie.**
 
-\textit{Jest to bardzo wysoki i niemalże nierealistyczny wynik.}
+\textit{Jest to bardzo wysoki i niemalże nierealistyczny wynik dla przeciętnego człowiekam, więcej na ten temat w $\S_3$.}
+
+
+# $\S_2$ Wrażliwość p na parametry modelu
+
+
+
+```{r zadanie_2}
+
+analiza_wrazliwosci <- function() {
+  
+  zakresy <- list(
+    Pi = seq(0, 0.17, 0.001),      #w 2022/2023 była kilkunastoprocentowa inflacja więc warto zbadać podobnie
+    c  = seq(0.02, 0.09, 0.0005),  #oprocentowanie obligacji raczej 2% < . < 8%
+    I  = seq(0.00, 0.08, 0.0005),  #podwyżki roczne < 8% ? to i tak jest dużo
+    t  = 33:43,                    #wiek rozpoczęcia emerytury 55–65 (od mojego obecnego wieku)
+    td = 48:78                     #'realistyczne' lata śmierci 70–100
+    ) #takie małe 'kroki' ponieważ wykresy w pdf miały jakieś dziwne dzikie dziury, ale już wywołane w rmd nie miały :) 
+  do.call(rbind, lapply(names(zakresy), function(k) {
+    do.call(rbind, lapply(zakresy[[k]], function(v) {
+      
+      w <- do.call(emerytura_p, setNames(list(v), k))
+      
+      data.frame(parametr = k, wartosc = v, p = w$p_procentowo)
+    }))
+  }))
+}
+
+wyniki_2 <- analiza_wrazliwosci()
+
+
+wyniki_2$parametr <- factor(
+  wyniki_2$parametr,
+  levels = c("Pi", "c", "I", "t", "td"),
+  labels = c("Inflacja Pi", "Stopa zwrotu c", "Wzrost pensji I", "Rok przejścia na emeryturę", "Rok śmierci")
+)
+
+ 
+# ggplot(wyniki_2, aes(x = wartosc, y = p, color = parametr)) +
+#   geom_line(linewidth = 2) +
+#   facet_wrap(~ parametr, scales = "free_x") +
+#   labs(
+#     title = "Wrażliwość p na parametry modelu",
+#     x = "Wartość parametru",
+#     y = "p (%)"
+#   ) +
+#   scale_color_manual(values = c(
+#     "Inflacja Pi" = "deepskyblue2",
+#     "Stopa zwrotu c" = "darkorange2",
+#     "Wzrost pensji I" = "maroon3",
+#     "Rok przejścia na emeryturę" = "forestgreen",
+#     "Rok śmierci" = "firebrick"
+#   )) +
+#   theme(legend.position = "none",
+#         plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+#         axis.text = element_text(size = 15),
+#         strip.text = element_text(size = 15, face = "bold"),
+#         axis.title.x = element_text(hjust = 0.5, size = 17, face = "bold"),
+#         axis.title.y = element_text(hjust = 0.5, size = 17, face = "bold"))
+# 
+# ggsave("wykresy_wrazliwosci.png", width = 12, height = 8, dpi = 300)
+#dołączam możliwość zobaczenia, że kod jest poprawny ale zapis pdf zwariował :(
+
+# Heatmapa wpływu zwrotu z obligacji i wzrostu wypłaty na p
+
+
+zakresy_hm <- expand.grid(c = seq(0.01, 0.2, 0.005), I = seq(0, 0.1, 0.005))
+
+zakresy_hm$p <- mapply(function(c, I) {
+  emerytura_p(c = c, I = I)$p_procentowo
+}, zakresy_hm$c, zakresy_hm$I)
+
+
+
+hm_c_I <- ggplot(zakresy_hm, aes(x = c, y = I, fill = p)) +
+  geom_tile() +
+  scale_fill_gradient(low = "skyblue", high = "maroon3") +
+  labs(title = "Mapa wrażliwości p dla c i I",
+       x = "c (stopa zwrotu z obligacji) ",
+       y = "I (stopa wzrostu wypłaty)",
+       fill = "p (%)")
+
+#Heatmapa wpływu momentu przejścia na emeryturę i śmierci na p
+
+zakresy_t_td <- subset(
+  expand.grid(
+    t = 30:45,
+    td = 41:95
+  ),
+  td > t
+)
+
+zakresy_t_td$p <- mapply(function(t, td) {
+  emerytura_p(t = t, td = td)$p_procentowo
+}, zakresy_t_td$t, zakresy_t_td$td)
+
+ggplot(zakresy_t_td, aes(x = t, y = td, fill = p)) +
+  geom_tile() +
+ scale_fill_viridis_c(option = "plasma") +
+  labs(
+    title = "Mapa wrażliwości p dla t i td",
+    x = "t",
+    y = "td",
+    fill = "p (%)"
+  )
+
+
+#limit 100% ??
+ggplot(subset(zakresy_t_td, p <= 100), aes(x = t, y = td, fill = p)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "plasma", limits = c(0, 100)) +
+  labs(
+    title = "Mapa wrażliwości p dla t i td - do 100%",
+    x = "t",
+    y = "td",
+    fill = "p (%)"
+  )
+
+
+#Wykres zaczęcia oszczędzania na emeryturę?>
+
+
+
+
+
+```
+
+```{r, out.width='100%'}
+knitr::include_graphics("wykresy_wrazliwosci.png")
+
+hm_c_I
+```
+
+\textbf {Wnioski z powyższych wykresów wrażliwości:}
+\begin{itemize}[label=$\square$]
+\item{fsfsf}
+\end{itemize}
+
+
+## Realistyczny poziom p i przykładowe rozwiązania
+
+\textbf{Jak obniżyć $p$ do realistycznego poziomu?}
+
+\begin{enumerate}
+    \item \textbf{Zwiększyć stopę zwrotu:}
+    \begin{itemize}
+        \item Przy $c = 5\%$: $p \approx 35-40\%$
+        \item Przy $c = 7\%$: $p \approx 25-30\%$
+    \end{itemize}
+    
+    \item \textbf{Zmniejszyć cel emerytury:}
+    \begin{itemize}
+        \item Przy 70\% ostatniej pensji: $p \approx 45-50\%$
+        \item Przy 50\% ostatniej pensji: $p \approx 30-35\%$
+    \end{itemize}
+    
+    \item \textbf{Zwiększyć wiek emerytalny:}
+    \begin{itemize}
+        \item Przy 45 latach pracy: $p$ spadnie o około 10\%
+    \end{itemize}
+    
+    \item \textbf{Skrócić okres emerytury?:}
+    \begin{itemize}
+        \item Przy 15 latach emerytury: $p \approx 50-55\%$
+    \end{itemize}
+\end{enumerate}
+# $\S_3$ Wady modelu i próba urzeczywistnienia jego założeń
 
 \begin{enumerate}
     \item \textbf{Holistyczne założenia:}
@@ -296,255 +464,7 @@ Implementując powyższy wzór i bazując na danych początkowych oraz używają
 \end{itemize}
 
 
-# $\S_2$ Wrażliwość p na parametry modelu
-
-
-
-```{r zadanie_2}
-
-analiza_wrazliwosci_1d <- function() {
-  
-  baza <- list(Pi = 0.02, c = 0.03, I = 0.05, t0 = 0, t = 40, td = 60, wyplata_t0 = 1)
-  
-  Pi_vec <- seq(0.00, 0.05, by = 0.001)
-  c_vec  <- seq(0.01, 0.08, by = 0.001)
-  I_vec  <- seq(0.00, 0.08, by = 0.001)
-  t_vec  <- 30:45
-  td_vec <- 41:95
-  
-  wyniki <- data.frame()
-  
-  for (Pi_i in Pi_vec) {
-    w <- emerytura_p(Pi = Pi_i, c = baza$c, I = baza$I, t0 = baza$t0, t = baza$t, td = baza$td, wyplata_t0 = baza$wyplata_t0)
-    wyniki <- rbind(wyniki, data.frame(parametr = "Pi", wartosc = Pi_i, p = w$p_procentowo))
-  }
-  
-  for (c_i in c_vec) {
-    w <- emerytura_p(Pi = baza$Pi, c = c_i, I = baza$I, t0 = baza$t0, t = baza$t, td = baza$td, wyplata_t0 = baza$wyplata_t0)
-    wyniki <- rbind(wyniki, data.frame(parametr = "c", wartosc = c_i, p = w$p_procentowo))
-  }
-  
-  for (I_i in I_vec) {
-    w <- emerytura_p(Pi = baza$Pi, c = baza$c, I = I_i, t0 = baza$t0, t = baza$t, td = baza$td, wyplata_t0 = baza$wyplata_t0)
-    wyniki <- rbind(wyniki, data.frame(parametr = "I", wartosc = I_i, p = w$p_procentowo))
-  }
-  
-  for (t_i in t_vec) {
-    w <- emerytura_p(Pi = baza$Pi, c = baza$c, I = baza$I, t0 = baza$t0, t = t_i, td = baza$td, wyplata_t0 = baza$wyplata_t0)
-    wyniki <- rbind(wyniki, data.frame(parametr = "t", wartosc = t_i, p = w$p_procentowo))
-  }
-  
-  for (td_i in td_vec) {
-    if (td_i > baza$t) {
-      w <- emerytura_p(Pi = baza$Pi, c = baza$c, I = baza$I, t0 = baza$t0, t = baza$t, td = td_i, wyplata_t0 = baza$wyplata_t0)
-      wyniki <- rbind(wyniki, data.frame(parametr = "td", wartosc = td_i, p = w$p_procentowo))
-    }
-  }
-  
-  return(wyniki)
-}
-####
-analiza_wrazliwosci_1d <- function() {
-  
-  library(dplyr)
-  
-  baza <- list(Pi=0.02, c=0.03, I=0.05, t0=0, t=40, td=60, wyplata_t0=1)
-  
-  grid <- list(
-    Pi = seq(0,0.05,0.001),
-    c  = seq(0.01,0.08,0.001),
-    I  = seq(0,0.08,0.001),
-    t  = 30:45,
-    td = 41:95
-  )
-  
-  bind_rows(lapply(names(grid), function(p) {
-    bind_rows(lapply(grid[[p]], function(v) {
-      
-      w <- do.call(emerytura_p, modifyList(baza, setNames(list(v), p)))
-      
-      data.frame(parametr=p, wartosc=v, p=w$p_procentowo)
-    }))
-  }))
-}
-###
-
-
-
-
-
-
-####
-analiza_wrazliwosci_1d <- function() {
-  
-  library(dplyr)
-  
-  grid <- list(
-    Pi = seq(0, 0.05, 0.001),
-    c  = seq(0.01, 0.08, 0.001),
-    I  = seq(0, 0.08, 0.001),
-    t  = 30:45,
-    td = 41:95
-  )
-  
-  bind_rows(lapply(names(grid), function(p) {
-    
-    bind_rows(lapply(grid[[p]], function(v) {
-      
-      args <- list()
-      args[[p]] <- v
-      
-      w <- do.call(emerytura_p, args)
-      
-      data.frame(
-        parametr = p,
-        wartosc = v,
-        p = w$p_procentowo
-      )
-    }))
-  }))
-}
-#######
-analiza_wrazliwosci_1d <- function() {
-  
-  grid <- list(
-    Pi = seq(0, 0.05, 0.001),
-    c  = seq(0.01, 0.08, 0.001),
-    I  = seq(0, 0.08, 0.001),
-    t  = 30:45,
-    td = 41:95
-  )
-  
-  do.call(rbind, lapply(names(grid), function(p) {
-    do.call(rbind, lapply(grid[[p]], function(v) {
-      
-      w <- do.call(emerytura_p, setNames(list(v), p))
-      
-      data.frame(parametr = p, wartosc = v, p = w$p_procentowo)
-    }))
-  }))
-}
-########
-wyniki_1d <- analiza_wrazliwosci_1d()
-
-library(ggplot2)
-library(dplyr)
-
-wyniki_1d$parametr <- factor(
-  wyniki_1d$parametr,
-  levels = c("Pi", "c", "I", "t", "td")
-)
-
-ggplot(wyniki_1d, aes(x = wartosc, y = p)) +
-  geom_line(linewidth = 1, color = "steelblue") +
-  facet_wrap(~parametr, scales = "free_x", ncol = 2) +
-  labs(
-    title = "Analiza wrażliwości 1D",
-    x = "wartość parametru",
-    y = "p (%)"
-  )
-
-ggplot(wyniki_1d, aes(x = wartosc, y = p, color = parametr)) +
-  geom_line(linewidth = 1) +
-  labs(
-    title = "Analiza wrażliwości 1D",
-    x = "wartość parametru",
-    y = "p (%)",
-    color = "parametr"
-  )
-
-c_vec <- seq(0.01, 0.08, 0.002)
-I_vec <- seq(0.00, 0.08, 0.002)
-
-grid_ci <- expand.grid(c = c_vec, I = I_vec)
-
-grid_ci$p <- mapply(function(c, I) {
-  emerytura_p(Pi = 0.02, c = c, I = I, t = 40, td = 60)$p_procentowo
-}, grid_ci$c, grid_ci$I)
-
-
-ggplot(grid_ci, aes(x = c, y = I, fill = p)) +
-  geom_tile() +
-  scale_fill_viridis_c() +
-  labs(
-    title = "Mapa wrażliwości p (c vs I)",
-    x = "c",
-    y = "I",
-    fill = "p (%)"
-  )
-
-
-t_vec <- 30:45
-td_vec <- 41:95
-
-grid_ttd <- expand.grid(t = t_vec, td = td_vec)
-
-grid_ttd$p <- mapply(function(t, td) {
-  if (td > t) {
-    emerytura_p(Pi = 0.02, c = 0.03, I = 0.05, t = t, td = td)$p_procentowo
-  } else {
-    NA
-  }
-}, grid_ttd$t, grid_ttd$td)
-
-
-ggplot(grid_ttd, aes(x = t, y = td, fill = p)) +
-  geom_tile() +
-  scale_fill_viridis_c(na.value = "white") +
-  labs(
-    title = "Mapa wrażliwości p (t vs td)",
-    x = "t",
-    y = "td",
-    fill = "p (%)"
-  )+ theme(
-  plot.title = element_text(face = "bold"),
-  panel.grid.minor = element_blank()
-)
-
-
-
-
-cat("\nINTERPRETACJA:\n")
-cat("- p nie zmienia się przy zmianie Pi, bo model działa na wielkościach realnych.\n")
-cat("- p maleje, gdy rośnie c.\n")
-cat("- p rośnie, gdy rośnie I.\n")
-cat("- p maleje, gdy rośnie t.\n")
-cat("- p rośnie, gdy rośnie td.\n")
-
-```
-
-
-## Realistyczny poziom p i przykładowe rozwiązania
-
-\textbf{Jak obniżyć $p$ do realistycznego poziomu?}
-
-\begin{enumerate}
-    \item \textbf{Zwiększyć stopę zwrotu:}
-    \begin{itemize}
-        \item Przy $c = 5\%$: $p \approx 35-40\%$
-        \item Przy $c = 7\%$: $p \approx 25-30\%$
-    \end{itemize}
-    
-    \item \textbf{Zmniejszyć cel emerytury:}
-    \begin{itemize}
-        \item Przy 70\% ostatniej pensji: $p \approx 45-50\%$
-        \item Przy 50\% ostatniej pensji: $p \approx 30-35\%$
-    \end{itemize}
-    
-    \item \textbf{Zwiększyć wiek emerytalny:}
-    \begin{itemize}
-        \item Przy 45 latach pracy: $p$ spadnie o około 10\%
-    \end{itemize}
-    
-    \item \textbf{Skrócić okres emerytury?:}
-    \begin{itemize}
-        \item Przy 15 latach emerytury: $p \approx 50-55\%$
-    \end{itemize}
-\end{enumerate}
-
-
-
-\textbf{Wniosek:} Wynik $p \approx 65\%$ jest \textbf{matematycznie poprawny} dla założeń zadania, ale w praktyce jest nierealistycznie wysoki. Sugeruje to, że:
+\textbf{Wniosek:} Wynik $p \approx$ `r wyniki$p_procentowo`\%$ jest \textbf{matematycznie poprawny} dla założeń zadania, ale w praktyce jest nierealistycznie wysoki. Sugeruje to, że:
 \begin{itemize}
     \item Przy obecnych założeniach (niska stopa zwrotu, ambitny cel emerytury) oszczędzanie na emeryturę jest bardzo trudne,
     \item W rzeczywistości ludzie polegają na systemie publicznym (ZUS) i odkładają prywatnie mniejsze kwoty,
