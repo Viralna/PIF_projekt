@@ -32,18 +32,17 @@ set.seed(17)
 library(dplyr)
 library(ggplot2)
 library(data.table)
-library(readxl)
 library(tidyr)
 library(knitr)
 library(kableExtra)
 library(reshape2)
 library(gridExtra)
-library(binom)
 library(ggtext)
 library(latex2exp)
 library(DescTools)
 library(ggpubr)
 library(parallel)
+library(scales)
 
 #Zmienne globalne
 
@@ -270,7 +269,13 @@ Implementując powyższy wzór oraz bazując na danych początkowych otrzymujemy
 
 # $\S_2$ Wrażliwość p na parametry modelu
 
-Warto zaznaczyć, że $t_0$, T, $t_d$ będą podawane w roku użycia osoby zarabiającej/przyjmującej emeryturę. W modelu założyliśmy, że \newline $t_0$ = 0, T = 40, $t_d$ = 60, natomiast na wykresie będą to odpowiednio lata życia: $t_0$ = 22, T = 62, $t_d$ = 82 itd. W skrócie, zakładamy, że zaczynamy zarabiać w wieku 22 lat i od tego momentu możemy zbierać na emeryturę.
+\ 
+
+
+\ 
+
+
+Warto zaznaczyć, że $t_0$, T, $t_d$ będą podawane w roku użycia osoby zarabiającej/przyjmującej emeryturę. W modelu założyliśmy, że \newline $t_0$ = 0, T = 40, $t_d$ = 60, natomiast na wykresie będą to odpowiednio lata życia: $t_0$ = 22, T = 62, $t_d$ = 82 itd. W skrócie, zakładamy, że zaczynamy zarabiać w wieku 22 lat i od tego momentu możemy inwestować na emeryturę.
 
 ```{r zadanie2}
 
@@ -281,7 +286,7 @@ analiza_wrazliwosci <- function() {
     c  = seq(0.02, 0.09, 0.0005),  #oprocentowanie obligacji raczej 2% < . < 8%
     I  = seq(0.00, 0.08, 0.0005),  #podwyżki roczne < 8% ? to i tak jest dużo
     t0 = 0:23,                     #rozpoczęcie odkładania na emeryturę 22-55(rok życia)
-    t  = 33:43,                    #wiek rozpoczęcia emerytury 55–65 (od mojego obecnego wieku)
+    t  = 33:53,                    #wiek rozpoczęcia emerytury 55–75 (od mojego obecnego wieku)
     td = 48:78                     #'realistyczne' lata śmierci 70–100
     ) #takie małe 'kroki' ponieważ wykresy w pdf miały jakieś dziwne dzikie dziury, ale już wywołane w rmd nie miały :) 
   do.call(rbind, lapply(names(zakresy), function(k) {
@@ -294,7 +299,7 @@ analiza_wrazliwosci <- function() {
   }))
 }
 
-wiek_start <- 22 #wiek startowy, aby wykresy były bardziej czytelne
+wiek_start <- 22 #wiek startowy, aby wykresy były bardziej czytelne/intuicyjne
 
 wyniki_2 <- analiza_wrazliwosci()
 
@@ -340,11 +345,12 @@ wyniki_2$parametr <- factor(
 #  ggsave("wrazliwosc.png", width = 12, height = 8, dpi = 300)
 
 
-
 # Heatmapa wpływu zwrotu z obligacji i wzrostu wypłaty na p
 
-
-zakresy_hm <- expand.grid(c = seq(0.001, 0.1, 0.005), I = seq(0, 0.08, 0.005))
+zakresy_hm <- expand.grid(
+  c = seq(0.001, 0.1, 0.005),
+  I = seq(0, 0.08, 0.005)
+)
 
 zakresy_hm$p <- mapply(function(c, I) {
   emerytura_p(c = c, I = I)$p_procentowo
@@ -352,22 +358,50 @@ zakresy_hm$p <- mapply(function(c, I) {
 
 zakresy_hm$c_proc <- zakresy_hm$c * 100
 zakresy_hm$I_proc <- zakresy_hm$I * 100
+zakresy_hm$czy_ponad_100 <- zakresy_hm$p > 100
 
-hm_c_I <- ggplot(zakresy_hm, aes(x = c_proc , y = I_proc, fill = p)) +
-  geom_tile() +
-  scale_fill_gradient(low = "skyblue", high = "maroon3") +
-  labs(title = "Heatmapa wrażliwości p w zależności od c i I",
-       x = "c (stopa zwrotu z obligacji w %) ",
-       y = "I (stopa wzrostu wypłaty w %)",
-       fill = "p (%)") +
+hm_c_I <- ggplot() +
+  geom_tile(
+    data = subset(zakresy_hm, p <= 100),
+    aes(x = c_proc, y = I_proc, fill = p)
+  ) +
+  geom_tile(
+    data = subset(zakresy_hm, p > 100),
+    aes(x = c_proc, y = I_proc),
+    fill = "darkgoldenrod"
+  ) +
+  scale_fill_gradient2(
+    low = "skyblue",
+    mid="slateblue",
+    high = "maroon3",
+    midpoint = 50,
+    limits = c(0, 100),
+    name = "p (%)"
+  ) +
+  labs(
+    title = "Heatmapa wrażliwości p w zależności od c i I",
+    x = "c (stopa zwrotu z obligacji w %)",
+    y = "I (stopa wzrostu wypłaty w %)"
+  ) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
     axis.text = element_text(size = 10)
+  ) +
+  annotate(
+    "label",
+    x = Inf, y = Inf, #w prawym górnym rogu
+    label = "p > 100% - poza realnym zakresem",
+    hjust = 1.005, vjust = 0.8,
+    fill = "darkgoldenrod",
+    color = "white",
+    size = 3
   )
 
-#Heatmapa wpływu momentu przejścia na emeryturę i śmierci na p
 
-zakresy_t_td <- expand.grid(t = 33:43, td = 48:78)
+
+#Heatmapa wpływu momentu przejścia na emeryturę i momentu śmierci na p
+
+zakresy_t_td <- expand.grid(t = 33:53, td = 48:78)
 
 zakresy_t_td$p <- mapply(function(t, td) {
   emerytura_p(t = t, td = td)$p_procentowo
@@ -381,17 +415,25 @@ zakresy_t_td <- zakresy_t_td |>
 
 hm_t_td <- ggplot(zakresy_t_td, aes(x = t, y = td, fill = p)) +
   geom_tile() +
- scale_fill_viridis_c(option = "plasma") +
+scale_fill_gradient2(
+  mid = "lightslateblue",
+  low = "lightseagreen",
+  high ="midnightblue",
+  midpoint=50
+) +
   labs(
     title = TeX("Mapa wrażliwości p w zależności od t i $t_d$"),
     x = "T (wiek rozpoczęcia emerytury)",
     y = TeX("$t_d$ (wiek śmierci)"),
     fill = "p (%)"
+  ) + theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text = element_text(size = 10)
   )
 
 
 
-#Wykres zaczęcia oszczędzania na emeryturę
+#Wykres zależności p od zaczęcia oszczędzania na emeryturę i momentu śmierci
 
 
 zakresy_t0_td <- expand.grid(t0 = 0:23, td = 48:78)
@@ -406,18 +448,49 @@ zakresy_t0_td <- zakresy_t0_td |>
     td = wiek_start + td
   )
 
-hm_t0_td <- ggplot(zakresy_t0_td, aes(x = t0, y = td, fill = p)) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "magma") +
+zakresy_t0_td$czy_ponad_100 <- zakresy_t0_td$p > 100
+
+hm_t0_td <- ggplot() +
+  geom_tile(
+    data = subset(zakresy_t0_td, p <= 100),
+    aes(x = t0, y = td, fill = p)
+  ) +
+  geom_tile(
+    data = subset(zakresy_t0_td, p > 100),
+    aes(x = t0, y = td),
+    fill = "darkgoldenrod"
+  ) +
+scale_fill_gradient2(
+  low = "navy",
+  mid = "hotpink",
+  high = "darkred",
+  limits = c(0, 100),
+  midpoint = 50,
+  name = "p (%)"
+  ) +
   labs(
-    title = TeX("Mapa wrażliwości p w zależności od $t_0$ i $t_d$"),
+    title = TeX("Heatmapa wrażliwości p w zależności od $t_0$ i $t_d$"),
     x = TeX("$t_0$ (wiek rozpoczęcia pracy)"),
-    y = TeX("$t_d$ (wiek śmierci)"),
-    fill = "p (%)"
+    y = TeX("$t_d$ (wiek śmierci)")
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text = element_text(size = 10)
+  ) +
+  annotate(
+    "label",
+    x = Inf, y = Inf,
+    label = "p > 100% poza realnym zakresem",
+    hjust = 1.05, vjust = 0.8,
+    fill = "darkgoldenrod",
+    color = "white",
+    size = 3
   )
 
 
-zakresy_t0_t <- expand.grid(t0 = 0:23, t = 33:43)
+#Wykres zależności p od zaczęcia oszczędzania na emeryturę i momentu przejścia na emeryturę
+
+zakresy_t0_t <- expand.grid(t0 = 0:23, t = 33:53)
 
 zakresy_t0_t$p <- mapply(function(t0, t) {
   emerytura_p(t0 = t0, t = t)$p_procentowo
@@ -429,18 +502,213 @@ zakresy_t0_t <- zakresy_t0_t |>
     t = wiek_start + t
   )
 
-hm_t0_t <- ggplot(zakresy_t0_t, aes(x = t0, y = t, fill = p)) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "heat") +
+zakresy_t0_t$czy_ponad_100 <- zakresy_t0_t$p > 100
+
+hm_t0_t <- ggplot() +
+  geom_tile(
+    data = subset(zakresy_t0_t, p <= 100),
+    aes(x = t0, y = t, fill = p)
+  ) +
+  geom_tile(
+    data = subset(zakresy_t0_t, p > 100),
+    aes(x = t0, y = t),
+    fill = "darkgoldenrod"
+  ) +
+  scale_fill_gradient2(
+    low = "navy",
+    mid = "blueviolet",
+    high = "darkorange2",
+    midpoint =50,
+    limits = c(0, 100),
+    name = "p (%)"
+  ) +
   labs(
-    title = TeX("Mapa wrażliwości p w zależności od $t_0$ i T"),
+    title = TeX("Heatmapa wrażliwości p w zależności od $t_0$ i T"),
     x = TeX("$t_0$ (wiek rozpoczęcia pracy)"),
-    y = "T (wiek rozpoczęcia emerytury)",
-    fill = "p (%)"
+    y = "T (wiek rozpoczęcia emerytury)"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    axis.text = element_text(size = 10)
+  ) +
+  annotate(
+    "label",
+    x = Inf, y = Inf,
+    label = "p > 100% poza realnym zakresem",
+    hjust = 1.05, vjust = 0.8,
+    fill = "darkgoldenrod",
+    color = "white",
+    size = 3
   )
 
 
+# Zależnośc p od stopy zwrotu i czasu przejścia na emeryturę
+
+zakresy_c_t <- expand.grid(c = seq(0.001, 0.09, 0.0005), t = 33:53)
+
+zakresy_c_t$p <- mapply(function(c, t) {
+  emerytura_p(c = c, t = t)$p_procentowo
+}, zakresy_c_t$c, zakresy_c_t$t)
+
+zakresy_c_t$c_proc <- zakresy_c_t$c * 100
+zakresy_c_t$t_wiek <- wiek_start + zakresy_c_t$t
+
+zakresy_c_t$czy_ponad_100 <- zakresy_c_t$p > 100
+
+hm_c_t <- ggplot() +
+  geom_tile(
+    data = subset(zakresy_c_t, p <= 100),
+    aes(x = c_proc, y = t_wiek, fill = p)
+  ) +
+  geom_tile(
+    data = subset(zakresy_c_t, p > 100),
+    aes(x = c_proc, y = t_wiek),
+    fill = "darkgoldenrod"
+  ) +
+  scale_fill_gradient2(
+    low = "thistle2",
+    mid = "darkorchid3",
+    high = "orangered4",
+    midpoint = 50,
+    limits = c(0, 100),
+    name = "p (%)"
+  ) +
+  labs(
+    title = TeX("Mapa wrażliwości p w zależności od $c$ i $t$"),
+    x = TeX("$c$ (stopa zwrotu z obligacji w \\%)"),
+    y = "t (wiek przejścia na emeryturę)"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    axis.text = element_text(size = 10)
+  ) +
+  annotate(
+    "label",
+    x = Inf, y = Inf,
+    label = "p > 100% poza realnym zakresem",
+    hjust = 1.05, vjust = 0.8,
+    fill = "darkgoldenrod",
+    color = "white",
+    size = 3
+  )
+
+
+# zależność p od wzrostu wypłaty i momentu przejścia na emeryturę
+
+
+zakresy_I_t <- expand.grid(I = seq(0.00, 0.08, 0.0005), t = 33:53)
+
+zakresy_I_t$p <- mapply(function(I, t) {
+  emerytura_p(I = I, t = t)$p_procentowo
+}, zakresy_I_t$I, zakresy_I_t$t)
+
+zakresy_I_t$I_proc <- zakresy_I_t$I * 100
+zakresy_I_t$t_wiek <- wiek_start + zakresy_I_t$t
+zakresy_I_t$czy_ponad_100 <- zakresy_I_t$p > 100
+
+hm_I_t <- ggplot() +
+  geom_tile(
+    data = subset(zakresy_I_t, p <= 100),
+    aes(x = I_proc, y = t_wiek, fill = p)
+  ) +
+  geom_tile(
+    data = subset(zakresy_I_t, p > 100),
+    aes(x = I_proc, y = t_wiek),
+    fill = "darkgoldenrod"
+  ) +
+  scale_fill_gradient2(
+  low = "skyblue",
+  mid = "blueviolet",
+  high = "orchid3",
+  midpoint = 50,
+  limits = c(0, 100),
+  name = "p (%)"
+) +
+  labs(
+    title = "Heatmapa wrażliwości p w zależności od I i t",
+    x = "I (stopa wzrostu pensji w %)",
+    y = "t (wiek przejścia na emeryturę)"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    axis.text = element_text(size = 10)
+  ) +
+  annotate(
+    "label",
+    x = Inf, y = Inf,
+    label = "p > 100% poza realnym zakresem",
+    hjust = 1.05, vjust = 0.8,
+    fill = "darkgoldenrod",
+    color = "white",
+    size = 3
+  )
+
+
+# Zależności p od stopy zwrotu i momentu rozpoczęcia odkładania na emeryturę
+
+
+
+zakresy_c_t0 <- expand.grid(c = seq(0.02, 0.09, 0.0005), t0 = 0:23)
+
+zakresy_c_t0$p <- mapply(function(c, t0) {
+  emerytura_p(c = c, t0 = t0)$p_procentowo
+}, zakresy_c_t0$c, zakresy_c_t0$t0)
+
+zakresy_c_t0$c_proc <- zakresy_c_t0$c * 100
+zakresy_c_t0$t0_wiek <- wiek_start + zakresy_c_t0$t0
+zakresy_c_t0$czy_ponad_100 <- zakresy_c_t0$p > 100
+
+hm_c_t0 <- ggplot() +
+  geom_tile(
+    data = subset(zakresy_c_t0, p <= 100),
+    aes(x = c_proc, y = t0_wiek, fill = p)
+  ) +
+  geom_tile(
+    data = subset(zakresy_c_t0, p > 100),
+    aes(x = c_proc, y = t0_wiek),
+    fill = "darkgoldenrod"
+  ) +
+  scale_fill_gradient2(
+  high = "darkgreen",
+  mid = "yellowgreen",
+  low = "cyan3",
+  midpoint = 50,
+  limits = c(0, 100),
+  name = "p (%)"
+) +
+  labs(
+    title = TeX("Heatmapa wrażliwości p w zależności od c i $t_0$"),
+    x = "c (stopa zwrotu z obligacji w %)",
+    y = TeX("$t_0$ (wiek rozpoczęcia oszczędzania na emeryturę)")
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    axis.text = element_text(size = 10)
+  ) +
+  annotate(
+    "label",
+    x = Inf, y = Inf,
+    label = "p > 100% poza realnym zakresem",
+    hjust = 1.05, vjust = 0.8,
+    fill = "darkgoldenrod",
+    color = "white",
+    size = 3
+  )
+
+
+
+
+
+
+
 ```
+
+\ 
+
+\ 
+
+
+
 
 ```{r, out.width='100%'}
 knitr::include_graphics("wrazliwosc.png")
@@ -450,11 +718,16 @@ knitr::include_graphics("wrazliwosc.png")
 
 grid.arrange(hm_t_td,hm_t0_td,hm_t0_t,ncol=1)
 
-
 ```
 
+
+```{r,fig.align='center',ig.width=7,fig.height=9}
+grid.arrange(hm_c_t,hm_I_t,hm_c_t0,ncol=1)
+```
+
+
 ```{r,fig.align='center'}
-grid.arrange(hm_c_I,ncol=1)
+hm_c_I
 ```
 
 \textbf {Wnioski z powyższych wykresów wrażliwości:}
