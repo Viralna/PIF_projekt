@@ -76,7 +76,7 @@ Wprowadźmy oznaczenia:
 \item {$t_0$} - rok rozpoczęcia inwestowania funduszy na emeryturę,
 \item {T} - rok przejścia na emeryturę,
 \item {$t_d$} - rok śmierci,
-\item {p} - procent odkładanej pensji na emeryturę w każdym miesiącu.
+\item {p} - procent inwestowanej pensji na emeryturę w każdym miesiącu.
 \end{itemize}
 
 \begin{tcolorbox}[
@@ -264,21 +264,21 @@ Dokładne wyprowadzenie wzoru znajduje się w pliku \textit{dodatki.pdf}.
 
 Implementując powyższy wzór oraz bazując na danych początkowych otrzymujemy: 
 
-**p $\approx$ `r wyniki$p` = `r wyniki$p_procentowo`% pensji miesięcznie.**
+**p $\approx$ `r wyniki$p` = `r round(wyniki$p_procentowo,5)`% pensji miesięcznie.**
 
-\textit{Jest to bardzo wysoki i niemalże nierealistyczny wynik dla przeciętnego człowiekam, więcej na ten temat w $\S_3$.}
+\textit{Jest to niemalże nierealistyczny wynik dla przeciętnej osoby, więcej na ten temat w $\S_3$.}
 
 \newpage
 
 # $\S_2$ Wrażliwość p na parametry modelu
 
-\ 
+\ fsfs
 
 
 \ 
 
 
-Warto zaznaczyć, że $t_0$, T, $t_d$ będą podawane w roku użycia osoby zarabiającej/przyjmującej emeryturę. W modelu założyliśmy, że \newline $t_0$ = 0, T = 40, $t_d$ = 60, natomiast na wykresie będą to odpowiednio lata życia: $t_0$ = 22, T = 62, $t_d$ = 82 itd. W skrócie, zakładamy, że zaczynamy zarabiać w wieku 22 lat i od tego momentu inwestujemy w obligacje na emeryturę.
+Warto zaznaczyć, że $t_0$, T, $t_d$ będą podawane w latach życia osoby zarabiającej/przyjmującej emeryturę. W modelu założyliśmy, że \newline $t_0$ = 0, T = 40, $t_d$ = 60, natomiast na wykresie będą to odpowiednio lata życia: $t_0$ = 22, T = 62, $t_d$ = 82 itd. W skrócie, zakładamy, że zaczynamy zarabiać w wieku 22 lat i od tego momentu inwestujemy w obligacje.
 
 
 ```{r zadanie2}
@@ -290,9 +290,9 @@ analiza_wrazliwosci <- function() {
     c  = seq(0.001, 0.1, 0.0005),  #oprocentowanie obligacji raczej 0.1% < . < 10%
     I  = seq(0.00, 0.1, 0.0005),   #podwyżki roczne < 10 % ? to i tak jest dużo
     t0 = 0:23,                     #rozpoczęcie odkładania na emeryturę 22-55(rok życia)
-    t  = 33:53,                    #wiek rozpoczęcia emerytury 55–75 (od mojego obecnego wieku)
+    t  = 33:53,                    #wiek rozpoczęcia emerytury 55–75 (od obecnego wieku)
     td = 48:78                     #'realistyczne' lata śmierci 70–100
-    ) #takie małe 'kroki' ponieważ wykresy w pdf miały jakieś dziwne dzikie dziury, ale już wywołane w rmd nie miały :) 
+    ) 
   do.call(rbind, lapply(names(zakresy), function(k) {
     do.call(rbind, lapply(zakresy[[k]], function(v) {
       
@@ -303,7 +303,9 @@ analiza_wrazliwosci <- function() {
   }))
 }
 
+#obliczenia muszą być spójne z wariantem t0=0, T=40 i td=60 więc dodajemy wiek_start poźniej niż w powyższej liście zakresy
 wiek_start <- 22 #wiek startowy, aby wykresy były bardziej czytelne/intuicyjne
+
 
 wyniki_2 <- analiza_wrazliwosci()
 
@@ -328,33 +330,39 @@ wyniki_2$parametr <- factor(
 
 
 
-# Do późniejszego zapisu jako png, bo jakoś ładniejsze są wtedy proporcje w pdf
+# Do późniejszego zapisu jako png, bo ładniejsze są wtedy proporcje w pdf
 
-# ggplot(wyniki_2, aes(x = wartosc, y = p, group = parametr, color = parametr)) +
-#   geom_line(linewidth = 3, lineend = "round", linejoin = "round") +
-#   facet_wrap(~ parametr, scales = "free_x") +
-#   labs(
-#     title = "1) Wrażliwość p na parametry modelu",
-#     x = "Wartość parametru",
-#     y = "p (%)"
-#   ) +
-#   scale_color_manual(values = c(
-#     "Inflacja Pi (%)" = "deepskyblue2",
-#     "Stopa zwrotu c (%)" = "darkorange2",
-#     "Wzrost pensji I (%)" = "maroon3",
-#     "Wiek rozpoczęcia inwestowania" = "darkmagenta",
-#     "Wiek przejścia na emeryturę" = "forestgreen",
-#     "Wiek śmierci" = "firebrick"
-#   )) +
-#   theme(legend.position = "none",
-#         plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
-#         axis.text = element_text(size = 15),
-#         strip.text = element_text(size = 15, face = "bold"),
-#         axis.title.x = element_text(hjust = 0.5, size = 17, face = "bold"),
-#         axis.title.y = element_text(hjust = 0.5, size = 17, face = "bold"))
-# 
-#  ggsave("wrazliwosc.png", width = 12, height = 8, dpi = 300)
+wrazliwosc <- ggplot(wyniki_2, aes(x = wartosc, y = p, group = parametr, color = parametr)) +
+  geom_line(linewidth = 3, lineend = "round", linejoin = "round") +
+  facet_wrap(~ parametr, scales = "free_x") +
+  labs(
+    title = "1) Wrażliwość p na parametry modelu",
+    x = "Wartość parametru",
+    y = "p (%)"
+  ) +
+  scale_color_manual(values = c(
+    "Inflacja Pi (%)" = "deepskyblue2",
+    "Stopa zwrotu c (%)" = "darkorange2",
+    "Wzrost pensji I (%)" = "maroon3",
+    "Wiek rozpoczęcia inwestowania" = "darkmagenta",
+    "Wiek przejścia na emeryturę" = "forestgreen",
+    "Wiek śmierci" = "firebrick"
+  )) +
+  theme(legend.position = "none",
+        text = element_text(family = "serif"),
+        plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+        axis.text = element_text(size = 15),
+        strip.text = element_text(size = 15, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 17, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 17, face = "bold"))
 
+# ggsave(
+#   "wrazliwosc.pdf",
+#   plot = wrazliwosc,
+#   device = cairo_pdf,
+#   width = 10,
+#   height = 7
+# )
 
 # Heatmapa wpływu zwrotu z obligacji i wzrostu wypłaty na p
 
@@ -383,9 +391,15 @@ hm_c_I <- ggplot() +
     limits = c(0, 100),
     name = "p (%)"
   ) +
-  labs(title = "Heatmapa wrażliwości p w zależności od c i I", x = "c (stopa zwrotu z obligacji w %)", y = "I (stopa wzrostu wypłaty w %)") +
-  theme(plot.title = element_text(hjust = 0.5, size = 12),
-        axis.text = element_text(size = 10)) +
+  labs(title = "Heatmapa wrażliwości p w zależności od c i I", x = "c (stopa zwrotu z obligacji w %)", y = "I (stopa wzrostu wypłaty w %)")+ theme(
+    text = element_text(family = "serif"),
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.text = element_text(size = 10),
+    axis.title.x = element_text(hjust = 0.5, size = 12),
+    axis.title.y = element_text(hjust = 0.5, size = 12),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  ) +
   annotate(
     "label",
     x = Inf,
@@ -398,8 +412,14 @@ hm_c_I <- ggplot() +
     color = "white",
     size = 3
   )
-#ggsave("hm_c_I.png", width = 12, height = 8, dpi = 300)
 
+# ggsave(
+#   "hm_c_I.pdf",
+#   plot = hm_c_I,
+#   device = cairo_pdf,
+#   width = 10,
+#   height = 7
+# )
 
 #Heatmapa wpływu momentu przejścia na emeryturę i momentu śmierci na p
 
@@ -422,14 +442,30 @@ hm_t_td <- ggplot(zakresy_t_td, aes(x = t, y = td, fill = p)) +
     midpoint = 50
   ) +
   labs(
-    title = TeX("Heatmapa wrażliwości p w zależności od t i $t_d$"),
+    title = TeX("Heatmapa wrażliwości p w zależności od T i $t_d$"),
     x = "T (wiek rozpoczęcia emerytury)",
     y = TeX("$t_d$ (wiek śmierci)"),
     fill = "p (%)"
-  ) + theme(plot.title = element_text(hjust = 0.5, size = 12),
-            axis.text = element_text(size = 10))
+  ) +
+    theme(
+      text = element_text(family = "serif"),
+      plot.title = element_text(hjust = 0.5, size = 15),
+      axis.text = element_text(size = 10),
+      axis.title.x = element_text(hjust = 0.5, size = 12),
+      axis.title.y = element_text(hjust = 0.5, size = 12),
+      legend.title = element_text(size = 16),
+      legend.text = element_text(size = 14)
+      # ,legend.key.height = unit(1.5, "cm"),  # do prezentacji większe legendy
+      # legend.key.width = unit(0.8, "cm")
+  )
 
-#ggsave("hm_t_td.png", width = 12, height = 8, dpi = 300)
+# ggsave(
+#   "hm_t_td.pdf",
+#   plot = hm_t_td,
+#   device = cairo_pdf,
+#   width = 10,
+#   height = 7
+# )
 
 #Wykres zależności p od zaczęcia oszczędzania na emeryturę i momentu śmierci
 
@@ -466,8 +502,15 @@ hm_t0_td <- ggplot() +
     x = TeX("$t_0$ (wiek rozpoczęcia inwestowania)"),
     y = TeX("$t_d$ (wiek śmierci)")
   ) +
-  theme(plot.title = element_text(hjust = 0.5, size = 12),
-        axis.text = element_text(size = 10)) +
+    theme(
+    text = element_text(family = "serif"),
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.text = element_text(size = 10),
+    axis.title.x = element_text(hjust = 0.5, size = 12),
+    axis.title.y = element_text(hjust = 0.5, size = 12),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  ) +
   annotate(
     "label",
     x = Inf,
@@ -479,7 +522,13 @@ hm_t0_td <- ggplot() +
     color = "white",
     size = 3
   )
-#ggsave("hm_t0_td.png", width = 12, height = 8, dpi = 300)
+# ggsave(
+#   "hm_t0_td.pdf",
+#   plot = hm_t0_td,
+#   device = cairo_pdf,
+#   width = 10,
+#   height = 7
+# )
 
 #Wykres zależności p od zaczęcia oszczędzania na emeryturę i momentu przejścia na emeryturę
 
@@ -514,8 +563,15 @@ hm_t0_t <- ggplot() +
     x = TeX("$t_0$ (wiek rozpoczęcia inwestowania)"),
     y = "T (wiek rozpoczęcia emerytury)"
   ) +
-  theme(plot.title = element_text(hjust = 0.5, size = 12),
-        axis.text = element_text(size = 10)) +
+    theme(
+    text = element_text(family = "serif"),
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.text = element_text(size = 10),
+    axis.title.x = element_text(hjust = 0.5, size = 12),
+    axis.title.y = element_text(hjust = 0.5, size = 12),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  ) +
   annotate(
     "label",
     x = Inf,
@@ -527,8 +583,13 @@ hm_t0_t <- ggplot() +
     color = "white",
     size = 3
   )
-
-#ggsave("hm_t0_t.png", width = 12, height = 8, dpi = 300)
+# ggsave(
+#   "hm_t0_t.pdf",
+#   plot = hm_t0_t,
+#   device = cairo_pdf,
+#   width = 10,
+#   height = 7
+# )
 
 # Zależnośc p od stopy zwrotu i czasu przejścia na emeryturę
 
@@ -558,13 +619,16 @@ hm_c_t <- ggplot() +
     limits = c(0, 100),
     name = "p (%)"
   ) +
-  labs(
-    title = TeX("Heatmapa wrażliwości p w zależności od $c$ i $t$"),
-    x = TeX("$c$ (stopa zwrotu z obligacji w \\%)"),
-    y = "T (wiek przejścia na emeryturę)"
+  labs(title = "Heatmapa wrażliwości p w zależności od c i T", x = "c (stopa zwrotu z obligacji w %)", y = "T (wiek przejścia na emeryturę)") +
+  theme(
+    text = element_text(family = "serif"),
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.text = element_text(size = 10),
+    axis.title.x = element_text(hjust = 0.5, size = 12),
+    axis.title.y = element_text(hjust = 0.5, size = 12),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
   ) +
-  theme(plot.title = element_text(hjust = 0.5, size = 12),
-        axis.text = element_text(size = 10)) +
   annotate(
     "label",
     x = Inf,
@@ -576,7 +640,13 @@ hm_c_t <- ggplot() +
     color = "white",
     size = 3
   )
-#ggsave("hm_c_t.png", width = 12, height = 8, dpi = 300)
+# ggsave(
+#   "hm_c_t.pdf",
+#   plot = hm_c_t,
+#   device = cairo_pdf,
+#   width = 10,
+#   height = 7
+# )
 
 # zależność p od wzrostu wypłaty i momentu przejścia na emeryturę
 
@@ -606,9 +676,16 @@ hm_I_t <- ggplot() +
     limits = c(0, 100),
     name = "p (%)"
   ) +
-  labs(title = "Heatmapa wrażliwości p w zależności od I i t", x = "I (stopa wzrostu pensji w %)", y = "T (wiek przejścia na emeryturę)") +
-  theme(plot.title = element_text(hjust = 0.5, size = 12),
-        axis.text = element_text(size = 10)) +
+  labs(title = "Heatmapa wrażliwości p w zależności od I i T", x = "I (stopa wzrostu pensji w %)", y = "T (wiek przejścia na emeryturę)") +
+   theme(
+    text = element_text(family = "serif"),
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.text = element_text(size = 10),
+    axis.title.x = element_text(hjust = 0.5, size = 12),
+    axis.title.y = element_text(hjust = 0.5, size = 12),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  ) +
   annotate(
     "label",
     x = Inf,
@@ -620,8 +697,14 @@ hm_I_t <- ggplot() +
     color = "white",
     size = 3
   )
+# ggsave(
+#   "hm_I_t.pdf",
+#   plot = hm_I_t,
+#   device = cairo_pdf,
+#   width = 10,
+#   height = 7
+# )
 
-#ggsave("hm_I_t.png", width = 12, height = 8, dpi = 300)
 
 # Zależności p od stopy zwrotu i momentu rozpoczęcia odkładania na emeryturę
 
@@ -657,8 +740,15 @@ hm_c_t0 <- ggplot() +
     x = "c (stopa zwrotu z obligacji w %)",
     y = TeX("$t_0$ (wiek rozpoczęcia inwestowania)")
   ) +
-  theme(plot.title = element_text(hjust = 0.5, size = 12),
-        axis.text = element_text(size = 10)) +
+    theme(
+    text = element_text(family = "serif"),
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.text = element_text(size = 10),
+    axis.title.x = element_text(hjust = 0.5, size = 12),
+    axis.title.y = element_text(hjust = 0.5, size = 12),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  ) +
   annotate(
     "label",
     x = Inf,
@@ -670,8 +760,14 @@ hm_c_t0 <- ggplot() +
     color = "white",
     size = 3
   )
+# ggsave(
+#   "hm_c_t0.pdf",
+#   plot = hm_c_t0,
+#   device = cairo_pdf,
+#   width = 10,
+#   height = 7
+# )
 
-#ggsave("hm_c_t0 .png", width = 12, height = 8, dpi = 300)
 
 #jeżeli chodzi o wykresy to stworzenie zmodularyzowanego kod dla nich, wydaje się nieopłacalne.
 #Większość wykresów tyczy się innych parametrów w różnych jednostkach, plus chciałam rozróżniać heatmapy między sobą, dlatego stworzyłam je w różnych kolorach, każdy wykres ma również innej tytuły itp. Dlatego próba modularyzacji moim zdaniem nie jest czasowo/wydajnościowo adekwatna do 'zysku'. Stwierdziłam, że modularyzacja dla wykresy 1 jest wystarczająca i ładna.
@@ -685,32 +781,31 @@ hm_c_t0 <- ggplot() +
 
 
 
-```{r, out.width='100%'}
-knitr::include_graphics("wrazliwosc.png")
+```{r, out.width='100%',out.height='50%'}
+knitr::include_graphics("wrazliwosc.pdf")
 ```
 
-```{r,fig.align='center',ig.width=7,fig.height=9}
+```{r,fig.align='center',fig.height=9}
 
 grid.arrange(hm_t_td,hm_t0_td,hm_t0_t,ncol=1)
 
 ```
 
-
-```{r,fig.align='center',ig.width=7,fig.height=9}
+```{r,fig.align='center',fig.height=9}
 grid.arrange(hm_I_t,hm_c_t,hm_c_t0,ncol=1)
 ```
 
 
-```{r,fig.align='center'}
+```{r,fig.align='center',fig.height=3.5,fig.width=7}
 hm_c_I
 ```
 
 \textbf {Wnioski z powyższych wykresów wrażliwości:}
 \begin{itemize}[label=$\square$]
-\item \textbf{Wpływ inflacji:} {Inflacja nie ma wpływu na procent inwestowanej pensji, ponieważ używamy realnych stóp procentowych. Fakt ten można wywnioskować z braku $\Pi$ we wzorze na p z $\S_1$ oraz po widocznej poziomej niebieskiej linii na wykresie 1). Linia ta świadczy o stałej wartości \textbf{p} niezależnie od wzrostu/spadku realnej stopy inflacji / stopy inflacji.}
-\item \textbf{Wpływ stopy zwrotu:} {Stopa zwrotu z obligacji \textbf{c} ma bardzo silny, ujemny wpływ na procent inwestowanej pensji \textbf{p}. Zachodzi zależność: im wyższa stopa, tym mniejszy procent inwestowanej miesięcznej pensji na emeryturę. Przy niskich stopach zwrotu, wartość \textbf{p} szybko rośnie i może przekraczać 100\%, co oznacza obszar poza 'realnymi możliwościami' tzn. przy wypłacie jako jedynym źródle dochodu, bez bonusów itp. nie da się inwestować więcej niż 100\% p.}
+\item \textbf{Wpływ inflacji:} {Inflacja jako $\Pi$ nie ma wpływu na procent inwestowanej pensji, ponieważ używamy realnych stóp procentowych, które już ją uwzględniają. Fakt ten również można wywnioskować z braku $\Pi$ we wzorze na p z $\S_1$ oraz po widocznej poziomej niebieskiej linii na wykresie 1). Linia ta świadczy o stałej wartości \textbf{p} niezależnie od wzrostu/spadku realnej stopy inflacji/stopy inflacji.}
+\item \textbf{Wpływ stopy zwrotu:} {Stopa zwrotu z obligacji \textbf{c} ma bardzo silny, ujemny wpływ na procent inwestowanej pensji \textbf{p}. Zachodzi zależność: im wyższa stopa, tym mniejszy procent inwestowanej miesięcznej pensji należy przeznaczać na emeryturę. Przy niskich stopach zwrotu, wartość \textbf{p} szybko rośnie i może przekraczać 100\%, co oznacza obszar poza 'realnymi możliwościami' tzn. przy wypłacie jako jedynym źródle dochodu, bez bonusów itp. nie da się inwestować więcej niż 100\% p. Poziomy graniczne realnych p są dobrze widoczne na heatmapach.}
 \item \textbf{Wpływ wzrostu pensji:} {Wzrost pensji \textbf{I} zwiększa wymagany procent inwestowania \textbf{p}. Im szybciej rośnie pensja, tym większa część miesięcznych wypłat musi zostać zainwestowana w obligacje. Na heatmapach widać, że dla wysokich wartości \textbf{I} model również może wychodzić poza granicę 100\% p.}
-\item \textbf{Wpływ wieku rozpoczęcia inwestowania:} {Im później zaczyna się oszczędzanie, tym wyższy musi być procent inwestowanej pensji \textbf{p}. To jedna z najważniejszych zależności, ponieważ skrócenie okresu oszczędzania/zarabiania silnie pogarsza możliwość zbudowania odpowiedniego kapitału, co widać zarówno na wykresie liniowym 1), jak i na heatmapach wrażliwości $t_0$ oraz $x\in \{t_d, T,c \}$ na \textbf{p}.}
+\item \textbf{Wpływ wieku rozpoczęcia inwestowania:} {Im później zaczynamy pracować i inwestować, tym wyższy musi być procent pensji \textbf{p}. To jedna z najważniejszych zależności, ponieważ skrócenie okresu oszczędzania/zarabiania silnie pogarsza możliwość zbudowania odpowiedniego kapitału, co widać zarówno na wykresie liniowym 1), jak i na heatmapach wrażliwości $t_0$ oraz $x\in \{t_d, T,c \}$ na \textbf{p}.}
 \item \textbf{Wpływ wieku przejścia na emeryturę:} {Późniejsze przejście na emeryturę obniża wymagany procent oszczędzania \textbf{p}. Efekt ten jest wyraźny, ale słabszy niż wpływ wieku rozpoczęcia oszczędzania czy stopy zwrotu. Dłuższy okres pracy/inwestowania daje więcej czasu na akumulację kapitału, a im szybciej go zarobimy tym więcej jest i będzie wart.}
 \item \textbf{Wpływ wieku śmierci:} {Im dłuższy przewidywany okres życia po przejściu na emeryturę, tym większy musi być procent oszczędzania \textbf{p}. Wynika to z konieczności finansowania dłuższego okresu wypłat emerytalnych (tym bardziej tak wysokich jak ostatnia pensja), dlatego na wykresach wraz ze wzrostem $t_d$ rośnie wymagany poziom oszczędzania.}
 \end{itemize}
