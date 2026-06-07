@@ -98,7 +98,7 @@ t_d = 60.
 
 \newpage
 
-# $\S_1$ Procent odkładanej pensji p
+# $\S_1$ Procent inwestowanej pensji p
 
 Przy powyższych danych początkowych obliczone zostanie p takie, że pierwsza emerytura będzie równa ostatniej
 pensji, a następnie będzie rosnąć w takim samym tempie jak inflacja.
@@ -884,7 +884,7 @@ hm_c_I
 pozostały kapitał powinien podlegać dziedziczeniu, tak jak ma to miejsce w IKE/IKZE.
     \item \textbf{Zdywersyfikować portfel} Dywersyfikacja portfela (zainwestowanie w dodatkowy instrument) może dać 5–7\% realnie rocznie, zamiast 3\%.
     \item \textbf{Podwyższyć pensję dyskretnie} Można modelować wzrost pensji jako proces dyskretny a nie jednostajny, ze zmianą np. raz w roku.
-    \item \textbf{Uwzględnić korzyści/zobowiązania emerytalnych} Można uwzględnić:
+    \item \textbf{Uwzględnić korzyści/zobowiązania emerytalne} Można uwzględnić:
       \begin{itemize}
          \item ZUS — obowiązkowe składki i wypłaty emerytalne,
          \item PPK — 2\% pracownik + 1.5-2.5\% pracodawca + 240zł/rok z budżetu państwa = łącznie miesięcznie $\approx$ 3.5-4.5\% + 20zł,
@@ -919,13 +919,13 @@ Chcemy znaleźć realistyczne wartości $q_u, q_d, p_u, p_d$.
 Wprowadźmy nowe oznaczenia:
 \[
 \begin{aligned}
-q_u &\; \text{— roczna realna stopa zwrotu (w stanie wzrostu) z prawdopodobieństwem } p_u,\\
-q_d &\; \text{— roczna realna stopa zwrotu (w stanie spadku) z prawdopodobieństwem } p_d,\\
-u &= 1 + q_u \quad \text{— mnożnik wzrostu ceny indeksu},\\
-d &= 1 + q_d \quad \text{— mnożnik spadku ceny indeksu},\\
-\Delta t &\; \text{— długość kroku czasowego},\\
-r &\; \text{— stopa wolna od ryzyka},\\
-\sigma &\; \text{— odchylenie standardowe historycznych stóp zwrotu}.
+q_u &\; \text{- roczna realna stopa zwrotu (w stanie wzrostu) z prawdopodobieństwem } p_u,\\
+q_d &\; \text{- roczna realna stopa zwrotu (w stanie spadku) z prawdopodobieństwem } p_d,\\
+u &= 1 + q_u \quad \text{- mnożnik wzrostu ceny indeksu},\\
+d &= 1 + q_d \quad \text{- mnożnik spadku ceny indeksu},\\
+\Delta t &\; \text{- długość kroku czasowego},\\
+r &\; \text{- realna stopa wolna od ryzyka},\\
+\sigma &\; \text{- odchylenie standardowe historycznych stóp zwrotu}.
 \end{aligned}
 \]
 \end{tcolorbox}
@@ -1061,7 +1061,7 @@ tabelka_stop_WIG_1 <- kable(
   WIG_t[,1:13],
   format = "latex",
   booktabs = TRUE,
-  caption = "Historyczne roczne stopy zwrotu indeksu WIG"
+  caption = "\\textbf{Historyczne roczne stopy zwrotu indeksu WIG}"
 ) %>%
   kable_styling(
     latex_options = c("striped", "hold_position", "scale_down"),
@@ -1092,7 +1092,7 @@ tabelka_wartosci <- kable(
   format = "latex",
   booktabs = TRUE,
   escape = FALSE,
-  caption = "Parametry modelu dwumianowego"
+  caption = "\\textbf{Parametry modelu dwumianowego}"
 ) %>%
   kable_styling(
     latex_options = c("striped", "hold_position")
@@ -1106,7 +1106,7 @@ tabelka_ER <- kable(
   format = "latex",
   col.names = c("WIG", "Obligacje"),
   booktabs = TRUE,
-  caption = "Oczekiwane roczne stopy zwrotu"
+  caption = "\\textbf{Oczekiwane roczne stopy zwrotu}"
 ) %>%
   kable_styling(
     latex_options = c("striped", "hold_position"),
@@ -1114,7 +1114,6 @@ tabelka_ER <- kable(
     font_size = 10
   ) %>%
   row_spec(0, bold = TRUE)
-
 
 
 ```
@@ -1160,7 +1159,7 @@ Obligacje pełnią rolę instrumentu pewnego, bezpiecznego, 'stabilizującego' w
 
 Moim zdaniem minimalna przewaga oczekiwanej stopy zwrotu WIG nie jest wystarczającym argumentem, aby np. całkowicie zastąpić obligacje akcjami w celu zabezpieczenia portfela emerytalnego. Różnica stóp zwrotu to zaledwie `r (ER$ER_WIG- ER$ER_obligacji)*100`% w ciągu roku. Tym bardziej, że nie mamy żadnych oszczędności poza tym, które moglibyśmy użyć na emeryturze. 
 
-Gdyby różnica, była na poziomie nawet kilku procent na korzyść indeksu, a ryzyko byłoby nawet większe to można by zastanowić się nad następującym przykładowym składem portfela: 32% obligacje i 68% indeks (najwyżej pojedziemy na jedną mniej super wycieczkę jachtem na emeryturze). Możnaby również spróbować strategii typu: rozpoczęcie od portfela ze składem 100% indeksu i z czasem zmieniać tę przewagę na korzyść obligacji.
+Gdyby różnica, była na poziomie nawet kilku procent na korzyść indeksu, a ryzyko byłoby nawet większe to można by zastanowić się nad następującym przykładowym składem portfela: 32% obligacje i 68% indeks (najwyżej pojedziemy na jedną mniej super wycieczkę jachtem na emeryturze). Można by również spróbować strategii typu: rozpoczęcie od portfela ze składem 100% indeksu i z czasem zmieniać tę przewagę na korzyść obligacji.
 
 
 Ale w tym wariancie i przy takich danych początkowych rozłożyłabym to w następujący sposób:      
