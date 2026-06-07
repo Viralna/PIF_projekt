@@ -272,8 +272,7 @@ Implementując powyższy wzór oraz bazując na danych początkowych otrzymujemy
 
 # $\S_2$ Wrażliwość p na parametry modelu
 
-\ fsfs
-
+\ 
 
 \ 
 
@@ -805,9 +804,9 @@ hm_c_I
 \item \textbf{Wpływ inflacji:} {Inflacja jako $\Pi$ nie ma wpływu na procent inwestowanej pensji, ponieważ używamy realnych stóp procentowych, które już ją uwzględniają. Fakt ten również można wywnioskować z braku $\Pi$ we wzorze na p z $\S_1$ oraz po widocznej poziomej niebieskiej linii na wykresie 1). Linia ta świadczy o stałej wartości \textbf{p} niezależnie od wzrostu/spadku realnej stopy inflacji/stopy inflacji.}
 \item \textbf{Wpływ stopy zwrotu:} {Stopa zwrotu z obligacji \textbf{c} ma bardzo silny, ujemny wpływ na procent inwestowanej pensji \textbf{p}. Zachodzi zależność: im wyższa stopa, tym mniejszy procent inwestowanej miesięcznej pensji należy przeznaczać na emeryturę. Przy niskich stopach zwrotu, wartość \textbf{p} szybko rośnie i może przekraczać 100\%, co oznacza obszar poza 'realnymi możliwościami' tzn. przy wypłacie jako jedynym źródle dochodu, bez bonusów itp. nie da się inwestować więcej niż 100\% p. Poziomy graniczne realnych p są dobrze widoczne na heatmapach.}
 \item \textbf{Wpływ wzrostu pensji:} {Wzrost pensji \textbf{I} zwiększa wymagany procent inwestowania \textbf{p}. Im szybciej rośnie pensja, tym większa część miesięcznych wypłat musi zostać zainwestowana w obligacje. Na heatmapach widać, że dla wysokich wartości \textbf{I} model również może wychodzić poza granicę 100\% p.}
-\item \textbf{Wpływ wieku rozpoczęcia inwestowania:} {Im później zaczynamy pracować i inwestować, tym wyższy musi być procent pensji \textbf{p}. To jedna z najważniejszych zależności, ponieważ skrócenie okresu oszczędzania/zarabiania silnie pogarsza możliwość zbudowania odpowiedniego kapitału, co widać zarówno na wykresie liniowym 1), jak i na heatmapach wrażliwości $t_0$ oraz $x\in \{t_d, T,c \}$ na \textbf{p}.}
-\item \textbf{Wpływ wieku przejścia na emeryturę:} {Późniejsze przejście na emeryturę obniża wymagany procent oszczędzania \textbf{p}. Efekt ten jest wyraźny, ale słabszy niż wpływ wieku rozpoczęcia oszczędzania czy stopy zwrotu. Dłuższy okres pracy/inwestowania daje więcej czasu na akumulację kapitału, a im szybciej go zarobimy tym więcej jest i będzie wart.}
-\item \textbf{Wpływ wieku śmierci:} {Im dłuższy przewidywany okres życia po przejściu na emeryturę, tym większy musi być procent oszczędzania \textbf{p}. Wynika to z konieczności finansowania dłuższego okresu wypłat emerytalnych (tym bardziej tak wysokich jak ostatnia pensja), dlatego na wykresach wraz ze wzrostem $t_d$ rośnie wymagany poziom oszczędzania.}
+\item \textbf{Wpływ wieku rozpoczęcia inwestowania:} {Im później zaczynamy pracować i inwestować, tym wyższy musi być procent pensji \textbf{p}. To jedna z najważniejszych zależności, ponieważ skrócenie okresu inwestowania silnie pogarsza możliwość zbudowania odpowiedniego kapitału, co widać zarówno z wykresu 1. (fioletowa linia), jak i na heatmapach wrażliwości \textbf{p} na $t_0$ oraz $x\in \{t_d, T,c \}$.}
+\item \textbf{Wpływ wieku przejścia na emeryturę:} {Późniejsze przejście na emeryturę obniża wymagany procent oszczędzania \textbf{p}. Efekt ten jest wyraźny, ale słabszy niż wpływ wieku rozpoczęcia pracy czy stopy zwrotu. Dłuższy okres inwestowania daje więcej czasu na akumulację kapitału, a im szybciej go zarobimy tym więcej jest i będzie wart.}
+\item \textbf{Wpływ wieku śmierci:} {Im dłuższy przewidywany okres życia po przejściu na emeryturę, tym większy musi być procent \textbf{p}. Wynika to z konieczności finansowania dłuższego okresu wypłat emerytalnych (tym bardziej tak wysokich jak ostatnia pensja), dlatego na wykresach wraz ze wzrostem $t_d$ rośnie wymagany poziom inwestowania \textbf{p}.}
 \end{itemize}
 
 
@@ -825,15 +824,15 @@ hm_c_I
 ## Lista założeń modelu
 
 
-- **Stała realna stopa inflacji** $\leftarrow$ zakładamy, że inflacja jest znana odgórnie i stała, co jest kompletnie nierealne,
+- **Stała realna stopa inflacji** $\leftarrow$ zakładamy, że inflacja jest znana odgórnie i stała, co jest nierealne,
 
 - **Stała realna stopa zwrotu z obligacji** $\leftarrow$ zakładamy, że stopa zwrotu jest stała i nie zmienia się w czasie, a zazwyczaj jest zmienna,
 
-- **Stała realna stopa wzrostu pensji** $\leftarrow$ zakładamy, że pensja rośnie jednostajnie co rok(łącznie o 5\%). W rzeczywistości pracownicy dostają podwyżki 'dyskretne' i zazwyczaj jest to rzadziej niż raz w roku. Często zależą one od wyników i 'wydajności' pracownika,
+- **Stała realna stopa wzrostu pensji** $\leftarrow$ zakładamy, że pensja rośnie jednostajnie (w roku łącznie o 5\%). W rzeczywistości pracownicy dostają podwyżki 'dyskretne' i zazwyczaj jest to rzadziej niż raz w roku. Często zależą one od wyników i 'wydajności' pracownika, co zazwyczaj nie jest równomiernie rozłożone w czasie,
 
 - **Ustalony momenty przejścia na emeryturę** $\leftarrow$ zakładamy, że przejdziemy na emeryturę dokładnie w momencie **T**, i nie przyjmujemy innej opcji, typu losowa wcześniejsza niezdolność do pracy lub chęć w przyszłości ewentualnego przedłużenia pracy,
 
-- **Ustalony momenty rozpoczęcia i ciągłość inwestowania/pracowania na emeryturę** $\leftarrow$ zakładamy, że rozpoczniemy iwestowanie na emeryturę dokładnie w momencie $t_0$. Ciągłe odkładanie tej samej procentowo kwoty z pensji nie biorąc pod uwagę np. potrzeby natychmiastowych dużych wydatków bądź przerw w karierze zawodowej związanej np. z chorobą albo ciążą i opieką nad dziećmi, jest mało realistyczne.
+- **Ustalony momenty rozpoczęcia i ciągłość inwestowania na emeryturę** $\leftarrow$ zakładamy, że rozpoczniemy inwestowanie na emeryturę dokładnie w momencie $t_0$. Ciągłe odkładanie tej samej procentowo kwoty z pensji nie biorąc pod uwagę np. potrzeby natychmiastowych dużych wydatków bądź przerw w karierze zawodowej związanej np. z chorobą albo ciążą i opieką nad dziećmi, jest mało realistyczne,
 
 - **Stały procent inwestowanej pensji** $\leftarrow$ odkładany jest ten sam procent pensji przez cały okres od 22 roku życia do 62, 
 
@@ -841,17 +840,17 @@ hm_c_I
   
 - **Wzrost emerytury wraz z inflacją** $\leftarrow$ realna wartość emerytury pozostaje stała przez cały okres od 62 roku życia aż do 82,
   
-- **Losowość momentu śmierci** $\leftarrow$ zakładamy, że śmierć następuje dokładnie w roku $t_d$, co jest kompletnie nierealnym założeniem( chyba, że planujemy np. eutanazję i jej datę?),  
+- **Losowość momentu śmierci** $\leftarrow$ zakładamy, że śmierć następuje dokładnie w roku $t_d$, co jest kompletnie nierealnym założeniem. Jeżeli przeżyjemy nawet 1 miesiąc dłużej niż zakładaliśmy i nie mamy żadnych oszczędności, to nie mamy żadnych stałych przychodów i 'za co żyć',
   
 - **Brak dziedziczenia kapitału** $\leftarrow$ model nie przewiduje przekazania pozostałego
   kapitału rodzinie w przypadku wcześniejszej śmierci,
   
 - **ZUS, IKZE, IKE** $\leftarrow$ nasze założenia pomijają wsparcie ZUS-u (prawdopodobnie nie będzie to bardzo istotna pomoc finansowa, ale będąc w 100% rzetelnym, powinno się ją uwzględnić niezależnie od ich wysokości). Zakładamy również brak możliwości korzystania w modelu IKE i IKZE, co mogłoby pomóc nam w zaoszczędzeniu na podatkach(np. Belki),
 
-- **Wypłaty pensji i emerytur** $\leftarrow$ zakładamy, że pensja wypłacana jest pod koniec przepracowanego miesiąca, natomiast zazwyczaj jest to moment 'do 10-tego' kolejnego miesiąca po tym przepracowanym. Wypłata emerytur zazwyczaj odbywa się z góry, natomiast w tym modelu zakładamy, że wypłata jest z dołu(pod koniec miesiąca).
+- **Wypłaty pensji i emerytur** $\leftarrow$ zakładamy, że pensja wypłacana jest pod koniec przepracowanego miesiąca, natomiast zazwyczaj jest to moment 'do 10-tego' kolejnego miesiąca. Wypłata emerytur zazwyczaj odbywa się z góry, natomiast w tym modelu zakładamy, że wypłata jest z dołu(pod koniec miesiąca).
 
 
-\textbf{\textcolor{darkred}{Najbardziej istotne założenia:}}
+\textbf{\textcolor{darkred}{Najbardziej istotne założenia i ich przykładowy wpływ:}}
 \begin{enumerate}
   \item \textbf{\textcolor{darkred}{Stopa zwrotu z obligacji}} $\leftarrow$ W porównaniu c=3\% z c=7\% wartość p spada prawie 3-krotnie,
   \item \textbf{\textcolor{darkred}{Wzrost pensji o I\% rocznie}} $\leftarrow$ Pensja rośnie szybciej niż kapitał - późniejsze składki są większe, ale pracują krócej na odsetkach. W porównaniu I=3\% z I=7\% wartość p spada około 2-krotnie,
@@ -861,7 +860,7 @@ hm_c_I
 
 ## Realistyczny poziom p 
 
-\textbf{Jak obniżyć $p$ do realistycznego poziomu?}
+\textbf{Co można zrobić aby obniżyć $p$ do realistycznego poziomu?}
 
 \begin{enumerate}
     \item \textbf{Zwiększyć stopę zwrotu:}
@@ -881,24 +880,24 @@ hm_c_I
         \item Obniżenie do 40\% ostatniej pensji daje nam $p \approx$ `r round(wyniki$p_procentowo * 0.4,1)`\%.
     \end{itemize}
     \item \textbf{Uśrednić moment śmierci} Można wycenić dożywotnią rentę przy użyciu tablic trwania życia z GUS.
-    W Polsce średni wiek zgonu kobiet wynosi ok. 82 lata, mężczyzn ok. 74 lata. W przypadku wcześniejszej śmierci
-pozostały kapitał powinien podlegać dziedziczeniu - tak jak ma to miejsce w IKE/IKZE.
-    \item \textbf{Dywersyfikacja portfela} może dać 5–7\% realnie rocznie.
-    \item \textbf{Podwyższka dyskretna} Można modelować wzrost pensji jako proces dyskretny a nie jednostajny, ze zmianą np. raz w roku.
-    \item \textbf{Uwzględnienie korzyści/zobowiązań emerytalnych} Można uwzględnić:
+    W Polsce średni wiek śmierci kobiet wynosi ok. 82 lata, mężczyzn ok. 74 lata. W przypadku wcześniejszej śmierci
+pozostały kapitał powinien podlegać dziedziczeniu, tak jak ma to miejsce w IKE/IKZE.
+    \item \textbf{Zdywersyfikować portfel} Dywersyfikacja portfela (zainwestowanie w dodatkowy instrument) może dać 5–7\% realnie rocznie, zamiast 3\%.
+    \item \textbf{Podwyższyć pensję dyskretnie} Można modelować wzrost pensji jako proces dyskretny a nie jednostajny, ze zmianą np. raz w roku.
+    \item \textbf{Uwzględnić korzyści/zobowiązania emerytalnych} Można uwzględnić:
       \begin{itemize}
          \item ZUS — obowiązkowe składki i wypłaty emerytalne,
-         \item PPK — 2\% pracownik + 2\% pracodawca + 1,5\% z budżetu państwa = łącznie $\approx$ 5,5\%,
+         \item PPK — 2\% pracownik + 1.5-2.5\% pracodawca + 240zł/rok z budżetu państwa = łącznie miesięcznie $\approx$ 3.5-4.5\% + 20zł,
          \item IKE/IKZE — prywatne oszczędności jako inwestycja emerytalna.
       \end{itemize}
-    \item \textbf{Zmienny procent p} Można zdefiniować progi płatności \textbf{p} - np. $p_1$ przez pierwsze 20 lat,
+    \item \textbf{Wprowadzić zmienny procent p} Można zdefiniować progi płatności \textbf{p} - np. $p_1$ przez pierwsze 20 lat,
 $p_2$ przez kolejne 20 lat itd.
 \end{enumerate}
 
-\textbf{Wniosek:} Wynik $p \approx$ `r round(wyniki$p_procentowo,2)`\% jest \textbf{matematycznie poprawny} dla założeń zadania, ale w praktyce jest nierealistycznie wysoki. Sugeruje to, że:
+\textbf{Wniosek:} Wynik $p \approx$ `r round(wyniki$p_procentowo,2)`\% jest \textbf{matematycznie poprawny} dla założeń zadania, ale w praktyce jest mało realistyczny. Sugeruje to, że:
 \begin{itemize}
     \item Przy obecnych założeniach (niska stopa zwrotu, ambitny cel emerytury) oszczędzanie na emeryturę jest bardzo trudne,
-    \item W rzeczywistości ludzie (błędnie) polegają na systemie publicznym (ZUS) i inwestują prywatnie mniejsze kwoty, lub i nie.
+    \item W rzeczywistości ludzie (błędnie) polegają na systemie publicznym (ZUS) i inwestują prywatnie mniejsze kwoty, lub i wcale.
 \end{itemize}
 
 \newpage
@@ -933,11 +932,11 @@ r &\; \text{— stopa wolna od ryzyka},\\
 
 
 
-Warto zaznaczyć, że $p_u$ oraz $p_d = 1 - p_u$ nie reprezentują rzeczywistych prawdopodobieństw wzrostu lub spadku wartości indeksu. Są to tzw. prawdopodobieństwa neutralne względem ryzyka (\textit{risk-neutral probabilities}), stanowiące element pewnego konstruktu matematycznego.
+Warto zaznaczyć, że $p_u$ oraz $p_d = 1 - p_u$ nie reprezentują rzeczywistych prawdopodobieństw wzrostu lub spadku wartości indeksu. Są to prawdopodobieństwa neutralne względem ryzyka (\textit{risk-neutral}), stanowiące element pewnego konstruktu matematycznego.
 
 Model zakłada określony rozkład zmian cen, który nie odzwierciedla bezpośrednio zachowań inwestorów, nastrojów rynkowych ani wpływu zdarzeń makroekonomicznych. Przyjęcie takiego założenia pozwala jednak zbudować model wolny od arbitrażu, co jest kluczowe z punktu widzenia poprawnej wyceny instrumentów finansowych.
 
-Dzięki zastosowaniu podejścia \textit{risk-neutral} możliwe jest wyznaczenie parametrów $q_u$, $q_d$, $p_u$ oraz $p_d$ w sposób matematycznie konsekwentny, bez konieczności prognozowania rzeczywistych prawdopodobieństw przyszłych zmian cen.
+Dzięki zastosowaniu podejścia \textit{risk-neutral} możliwe jest wyznaczenie parametrów $q_u$, $q_d$, $p_u$ oraz $p_d$ w sposób matematycznie konsekwentny, bez konieczności prognozowania prawdopodobieństw przyszłych zmian cen w świecie rzeczywistym.
 
 
 
@@ -950,7 +949,7 @@ Równoważne zapisy warunku braku arbitrażu :
 
 * $q_d < r < q_u$  dla stóp zwrotu. 
 
-gdzie r to realna stopa wolna od ryzyka (w tym przypadku można zakładać, że będzie to c=0.03 związana z obligacjami).
+gdzie r to realna stopa wolna od ryzyka (w tym przypadku zakładamy, że będzie to c=0.03 związana z obligacjami).
 
 \ 
 
@@ -1120,12 +1119,15 @@ tabelka_ER <- kable(
 
 ```
 
-## Wyniki i wnioski 
+
 
 ```{r}
 tabelka_stop_WIG_1
 tabelka_stop_WIG_2
 ```
+
+
+## Wyniki i wnioski 
 
 Po dokananych obliczeniach według powyższego planu otrzymujemy:
 
@@ -1133,9 +1135,9 @@ Po dokananych obliczeniach według powyższego planu otrzymujemy:
 tabelka_wartosci
 ```
 
-Można zauważyć, że prawdopodobieństwa risk-neutral wzrostu i spadku są bliskie `r round(parametry$'$p_u$' *100,0)`% , co oznacza, że w modelu żaden z kierunków zmian nie jest preferowany.
+Można zauważyć, że prawdopodobieństwa risk-neutral wzrostu i spadku są bliskie `r round(parametry$'$p_u$' *100,0)`%, co oznacza, że w modelu żaden z kierunków zmian nie jest preferowany.
 
-Oczekiwana stopa zwrotu w stanie wzrostu wynosi $\approx$ `r round(parametry$'$q_u$' *100,2)` %, a w stanie spadku $\approx$ `r round(parametry$'$q_d$' *100,2)`% . Wynik ten sugeruje istotną zmienność rynku, ale również nie wskazuje jednoznacznie 'dominującego' kierunku zmian.
+Oczekiwana stopa zwrotu w stanie wzrostu wynosi $\approx$ `r round(parametry$'$q_u$' *100,2)`%, a w stanie spadku $\approx$ `r round(parametry$'$q_d$' *100,2)`%. Wynik ten sugeruje całkiem sporą możliwą zmienność rynku, ale nie wskazuje jednoznacznie 'dominującego' kierunku zmian.
 
 \textbf{Poniżej sprawdzimy czy warunek braku arbitrażu w modelu został spełniony:}
 
@@ -1150,21 +1152,23 @@ tabelka_ER
 ```
 
 
-Otrzymane wyniki wskazują, że oczekiwana roczna stopa zwrotu z WIG wynosi $\approx$ `r ER$ER_WIG*100` %, a dla obligacji została przyjęta wartość `r ER$ER_obligacji*100`%. Różnica między tymi wartościami jest bardzo mała, co oznacza, że patrząc na samą średnią opłacalność oba aktywa wypadają niemalże identycznie. Taki rezultat jest zgodny z założeniem modelu bez arbitrażu, w którym wycena ma być spójna i ma nie tworzyć możliwości pewnego zysku bez ryzyka.
+Otrzymane wyniki wskazują, że oczekiwana roczna stopa zwrotu z WIG wynosi $\approx$ `r ER$ER_WIG*100`%, a dla obligacji została przyjęta wartość `r ER$ER_obligacji*100`%. Różnica między tymi wartościami jest bardzo mała, co oznacza, że patrząc na samą średnią opłacalność oba aktywa są niemalże identyczne. Taki rezultat jest zgodny z założeniem modelu bez arbitrażu, w którym wycena ma  nie tworzyć możliwości pewnego zysku bez ryzyka.
 
-Warto podkreślić, że podobna oczekiwana stopa zwrotu nie oznacza podobnego poziomu ryzyka. Indeks giełdowy charakteryzuje się większą zmiennością niż obligacje, co jest opisane przez parametr $\sigma \approx$ `r round(sigma,3)` odpowiadający za rozrzut możliwych wartości indeksu. Z tego względu WIG może być traktowany jako aktywo potencjalnie nieco bardziej opłacalne, ale co za tym idzie, z wyższym ryzykiem niż obligacje.
+Warto podkreślić, że podobna oczekiwana stopa zwrotu nie oznacza podobnego poziomu ryzyka. Indeks giełdowy charakteryzuje się większą zmiennością niż obligacje, co jest opisane przez parametr $\sigma \approx$ `r round(sigma,3)` odpowiadający za rozrzut możliwych wartości indeksu. Z tego względu WIG może być traktowany jako aktywo potencjalnie nieco bardziej opłacalne, ale co za tym idzie, z wyższym ryzykiem niż obligacje. W perspektywie długoletniej i tak indeks jest aktywem zazwyczaj rosnącym na wartości. 
 
-Oznacza to, że obligacje pełnią rolę instrumentu pewnego, bezpiecznego, 'stabilizującego' wartość portfela. Natomiast indeks giełdowy może być jego bardziej 'ryzykowną' częścią. 
+Obligacje pełnią rolę instrumentu pewnego, bezpiecznego, 'stabilizującego' wartość portfela. Natomiast indeks giełdowy może być jego bardziej 'ryzykowną' częścią, ale opłacalną w długiej perspektywie czasu.
 
-Moim zdaniem minimalna przewaga oczekiwanej stopy zwrotu WIG nie jest wystarczającym argumentem, aby np. całkowicie zastąpić obligacje akcjami w celu zabezpieczenia portfela emerytalnego. Różnica stóp zwrotu to zaledwie `r (ER$ER_WIG- ER$ER_obligacji)*100` % w ciągu roku.
+Moim zdaniem minimalna przewaga oczekiwanej stopy zwrotu WIG nie jest wystarczającym argumentem, aby np. całkowicie zastąpić obligacje akcjami w celu zabezpieczenia portfela emerytalnego. Różnica stóp zwrotu to zaledwie `r (ER$ER_WIG- ER$ER_obligacji)*100`% w ciągu roku. Tym bardziej, że nie mamy żadnych oszczędności poza tym, które moglibyśmy użyć na emeryturze. 
 
-Gdyby różnica, była na poziomie nawet kilku procent na korzyść indeksu, a ryzyko byłoby nawet większe to można by zastanowić się nad następującym składem portfela: 32% obligacje i 68% indeks (najwyżej pojedziemy na jedną mniej super wycieczkę jachtem na emeryturze). 
+Gdyby różnica, była na poziomie nawet kilku procent na korzyść indeksu, a ryzyko byłoby nawet większe to można by zastanowić się nad następującym przykładowym składem portfela: 32% obligacje i 68% indeks (najwyżej pojedziemy na jedną mniej super wycieczkę jachtem na emeryturze). Możnaby również spróbować strategii typu: rozpoczęcie od portfela ze składem 100% indeksu i z czasem zmieniać tę przewagę na korzyść obligacji.
 
 
-Ale w tym wariancie i przy takich danych początkowych rozłożyłabym to w następujący sposób :      
+Ale w tym wariancie i przy takich danych początkowych rozłożyłabym to w następujący sposób:      
 **37% kwoty na indeks i 63% kwoty obligacje**, tak aby jednak mieć większą pewność, że np. udamy się na tę wycieczkę jachtem. 
+Oba aktywa mają podobny poziom zwrotu, a jednak indeks jest mniej stabliny od obligacji
 
-Rozłożenie tego na 100% obligacji również będzie świetnym rozwiązaniem, (ja po prostu minimalnie wiecej ryzykuję). Tym bardziej biorąc pod uwagę, że większość ludzi liczy na emeryturę z ZUS-u i nic nie inwestują poza, nawet na IKE ani na IKZE.
+
+Rozłożenie tego na 100% obligacji również będzie świetnym rozwiązaniem, (ja po prostu minimalnie wiecej ryzykuję). Tym bardziej to dobre rozwiązanie biorąc pod uwagę, że większość ludzi liczy na emeryturę z ZUS-u i nic nie inwestują poza, nawet na IKE ani na IKZE.
 
 Powyższe procenty w protfelu są częściami kwoty, którą z miesięcznej pensji przeznaczamy na przyszłą emeryturę.
 
